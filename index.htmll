@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍌！</title>
+    <style>
+        :root {
+            --apple-black: #1d1d1f;
+            --apple-grey: #86868b;
+            --apple-link: #0066cc;
+            --apple-bg: #f5f5f7;
+            --apple-border: #d2d2d7;
+            --apple-footer-grey: #6e6e73;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro SC","SF Pro Text","Helvetica Neue", Helvetica, Arial, sans-serif;
+            background-color: #ffffff;
+            color: var(--apple-black);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between; /* 确保页脚在最下方 */
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: 44px;
+            background: rgba(251, 251, 253, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 9999;
+            border-bottom: 0.5px solid rgba(0,0,0,0.1);
+        }
+
+        /* 居中核心内容区 */
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+            max-width: 600px;
+            animation: fadeIn 1.2s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        h1 {
+            font-size: 48px;
+            font-weight: 600;
+            letter-spacing: -0.015em;
+            margin-bottom: 12px;
+            color: var(--apple-black);
+        }
+
+        .bili-link {
+            font-size: 21px;
+            color: var(--apple-link);
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 48px;
+            transition: opacity 0.3s;
+        }
+
+        .bili-link:hover {
+            opacity: 0.7;
+            text-decoration: underline;
+        }
+
+        .bili-link::after {
+            content: " ↗";
+            font-size: 16px;
+        }
+
+        .tools-section {
+            width: fit-content;
+            margin: 0 auto;
+        }
+
+        details {
+            border-radius: 20px;
+        }
+
+        summary {
+            list-style: none;
+            outline: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--apple-grey);
+            padding: 6px 16px;
+            border: 1px solid var(--apple-border);
+            border-radius: 40px;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.2s ease;
+            background: #fff;
+        }
+
+        summary:hover {
+            background: var(--apple-bg);
+            color: var(--apple-black);
+        }
+
+        summary::before {
+            content: "";
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background-color: #34c759;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .content {
+            margin-top: 12px;
+            padding: 16px 24px;
+            background-color: var(--apple-bg);
+            border-radius: 14px;
+            text-align: left;
+            border: 0.5px solid rgba(0,0,0,0.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .tool-link {
+            text-decoration: none;
+            display: block;
+        }
+
+        .tool-name {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--apple-black);
+            margin-bottom: 2px;
+        }
+
+        .tool-desc {
+            font-size: 12px;
+            color: var(--apple-grey);
+        }
+
+        /* 页脚小字 */
+        footer {
+            padding: 24px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .disclaimer {
+            font-size: 12px;
+            color: var(--apple-footer-grey);
+            font-weight: 400;
+            letter-spacing: 0.01em;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @media (max-width: 734px) {
+            h1 { font-size: 34px; }
+            .bili-link { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav></nav>
+
+    <div class="main-wrapper">
+        <div class="container">
+            <h1>🍌🍌🍌</h1>
+            /* <a href="" class="bili-link" target="_blank">站点链接</a>*/
+
+            <div class="tools-section">
+                <details>
+                    <summary>工具吧大概</summary>
+                    <div class="content">
+                        <a href="/random" class="tool-link">
+                            <div class="tool-name">随机模拟器</div>
+                            <div class="tool-desc">可以调整条目，支持导出导入，修改完设置记得保存哦。</div>
+                        </a>
+                    </div>
+                </details>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p class="disclaimer">其实没做主页，但是感觉不能空着这里。</p>
+    </footer>
+
+</body>
+</html>
