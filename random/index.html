@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>随机模拟器</title>
+    <style>
+        /* 全局样式重置 */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #f6f9fc 0%, #eef2f7 100%);
+            color: #2d3748;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 10px;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        /* 标题栏 - 更加紧凑 */
+        .title-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 15px;
+        }
+        .title-wrapper h2 {
+            color: #1a202c;
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+        
+        .settings-btn {
+            position: absolute;
+            right: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            background: #ffffff;
+            border-radius: 10px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #eee;
+        }
+
+        /* 主抽取按钮 - 减小高度 */
+        .btn-group { width: 100%; max-width: 500px; margin-bottom: 12px; }
+        #rollBtn {
+            width: 100%; padding: 15px; font-size: 18px; font-weight: bold; color: #fff;
+            background: linear-gradient(135deg, #0984e3 0%, #0097e6 100%);
+            border: none; border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(9, 132, 227, 0.2);
+            cursor: pointer;
+            transition: all 0.1s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #rollBtn:active { transform: scale(0.98); }
+
+        /* 容器卡片 */
+        .card-container {
+            width: 100%; max-width: 500px; background: #ffffff; padding: 12px;
+            border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 12px;
+            border: 1px solid #f0f0f0;
+        }
+
+        /* 结果显示 - 减小内边距 */
+        .modifier-result {
+            font-size: 19px; font-weight: bold; padding: 15px;
+            border-radius: 10px; text-align: center; min-height: 60px; 
+            display: flex; align-items: center; justify-content: center;
+        }
+        .mod-none { color: #a0aec0; background-color: #f8fafc; border: 1px solid #e2e8f0; font-weight: normal; font-size: 15px; }
+
+        /* 配置面板 */
+        #config-container { display: none; padding: 12px; }
+        .setting-block { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #edf2f7; }
+        .setting-title { font-weight: bold; margin-bottom: 8px; display: block; color: #4a5568; font-size: 13px; }
+
+        .trigger-prob { display: flex; align-items: center; justify-content: space-between; }
+        .trigger-prob input { width: 60px; height: 32px; border: 1px solid #ddd; border-radius: 6px; text-align: center; }
+
+        /* 可滚动表格容器，固定高度 */
+        .config-table-scroll {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #edf2f7;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .config-table { width: 100%; border-collapse: collapse; }
+        .config-table th { background: #4a5568; color: white; padding: 8px 4px; font-size: 12px; position: sticky; top: 0; z-index: 1; }
+        .config-table td { padding: 6px 4px; border-bottom: 1px solid #eee; }
+        .config-table input, .config-table select { width: 100%; border: 1px solid #ddd; border-radius: 4px; padding: 6px; font-size: 12px; }
+        
+        .color-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
+
+        .action-btns { display: flex; gap: 8px; margin-top: 10px; }
+        .add-btn { flex: 1; background: #e6fffa; color: #049f7e; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: bold; border: none; cursor: pointer; }
+        .clear-all-btn { flex: 1; background: #fff5f5; color: #e53e3e; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: bold; border: none; cursor: pointer; }
+        .save-btn { flex: 1; background: #2d3748; color: #fff; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: bold; border: none; cursor: pointer; }
+
+        .io-btns { display: flex; gap: 6px; margin-top: 8px; }
+        .io-btn { flex: 1; background: #f1f2f6; color: #57606f; padding: 8px; border-radius: 6px; font-size: 11px; font-weight: bold; border: 1px solid #dfe4ea; cursor: pointer; }
+
+        /* 历史记录 */
+        .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .history-header h3 { font-size: 15px; margin: 0; }
+        #clearBtn { background-color: #ff7675; color: white; padding: 4px 10px; border-radius: 6px; font-size: 11px; border: none; cursor: pointer;}
+
+        .history-scroll { width: 100%; border-radius: 10px; border: 1px solid #2d3436; overflow: hidden; }
+        .history-table { width: 100%; border-collapse: collapse; background: white; }
+        .history-table th { background-color: #2d3436; color: #ffffff; padding: 10px; font-size: 13px; }
+        .history-table td { padding: 10px; font-size: 13px; border-bottom: 1px solid #e2e8f0; text-align: center; }
+        
+        .settings-footer { margin-top: 10px; padding-top: 8px; border-top: 1px dashed #ddd; font-size: 11px; color: #a0aec0; text-align: center; }
+
+        /* toast 样式 */
+        .toast-message {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e272e;
+            color: #ffffff;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            z-index: 10000;
+            transition: opacity 0.2s;
+            letter-spacing: 0.3px;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .io-btns + .io-btns { margin-top: 6px; }
+
+        /* 红字提醒 */
+        .reminder-text {
+            color: red;
+            text-align: center;
+            margin: 12px 0 4px;
+            font-weight: bold;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="title-wrapper">
+        <h2>随机模拟器</h2>
+        <div class="settings-btn" onclick="toggleConfig()">⚙️</div>
+    </div>
+
+    <div class="btn-group">
+        <button id="rollBtn" onclick="generateResults()">随一下</button>
+    </div>
+
+    <div class="card-container">
+        <div id="res-modifier" class="modifier-result mod-none">【等待抽取】</div>
+    </div>
+
+    <div class="card-container" id="config-container">
+        <div class="setting-block trigger-prob">
+            <span class="setting-title">触发概率</span>
+            <div><input type="number" id="triggerProbInput" value="100"> %</div>
+        </div>
+        
+        <div class="setting-block" style="border-bottom:none; padding-bottom:0">
+            <span class="setting-title">词条权重设置</span>
+            <div style="overflow-x:auto;" class="config-table-scroll">
+                <table class="config-table">
+                    <thead>
+                        <tr>
+                            <th width="10%">#</th>
+                            <th>词条描述</th>
+                            <th width="22%">权重</th>
+                            <th width="12%">删</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modifierTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="action-btns">
+            <button class="add-btn" onclick="addRow()">+ 新增</button>
+            <button class="clear-all-btn" onclick="clearAllConfig()">清空配置</button>
+            <button class="save-btn" onclick="saveConfig()">保存设置</button>
+        </div>
+        <div class="reminder-text">记得保存 记得保存 记得保存</div>
+
+        <div class="io-btns">
+            <button class="io-btn" onclick="exportConfig()">复制配置</button>
+            <button class="io-btn" onclick="importConfig()">粘贴导入</button>
+        </div>
+        <div class="io-btns">
+            <button class="io-btn" onclick="exportToFile()">📁 导出成文件</button>
+            <button class="io-btn" onclick="importFromFile()">📂 从文件导入</button>
+        </div>
+
+        <div class="settings-footer">Created by R @1203605850</div>
+    </div>
+
+    <div class="card-container">
+        <div class="history-header">
+            <h3>最近记录</h3>
+            <button id="clearBtn" onclick="clearHistory()">清空</button>
+        </div>
+        <div class="history-scroll">
+            <table class="history-table">
+                <thead>
+                    <tr><th width="30%">时间</th><th width="70%">抽取结果</th></tr>
+                </thead>
+                <tbody id="history-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const colorPalette = [
+            { text: '#d63031', bg: '#fff5f5', border: '#ff7675' },
+            { text: '#0984e3', bg: '#f0f8ff', border: '#74b9ff' },
+            { text: '#00b894', bg: '#e6fff9', border: '#55efc4' },
+            { text: '#6c5ce7', bg: '#f3f0ff', border: '#a29bfe' },
+            { text: '#e17055', bg: '#fff3ec', border: '#fab1a0' },
+            { text: '#00cec9', bg: '#e0ffff', border: '#81ecec' },
+            { text: '#e84393', bg: '#ffeff6', border: '#fd79a8' },
+            { text: '#d35400', bg: '#fff2e6', border: '#e67e22' }
+        ];
+
+        let triggerProb = 100;
+        // 初始词条 (3条，权重均为1)
+        let modifiers = [
+            { text: '问题1', weight: 1 },
+            { text: '问题2', weight: 1 },
+            { text: '问题3', weight: 1 }
+        ];
+
+        // 记录最近10次有结果的词条（用于避免重复）
+        let recentHistory = [];
+
+        window.onload = () => {
+            const savedTriggerProb = localStorage.getItem('challenge_trigger_prob_v7');
+            const savedModifiers = localStorage.getItem('challenge_modifiers_v7');
+            if (savedTriggerProb !== null) triggerProb = parseFloat(savedTriggerProb);
+            if (savedModifiers) modifiers = JSON.parse(savedModifiers);
+            updateConfigUI();
+            renderTable();
+
+            document.getElementById('rollBtn').innerText = '随一下';
+        };
+
+        // 轻提示
+        function showToast(msg, duration = 5000) {
+            const existing = document.querySelector('.toast-message');
+            if (existing) existing.remove();
+            const toast = document.createElement('div');
+            toast.className = 'toast-message';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                if (toast.parentNode) toast.remove();
+            }, duration);
+        }
+
+        function updateConfigUI() { document.getElementById('triggerProbInput').value = triggerProb; }
+
+        function toggleConfig() {
+            const c = document.getElementById('config-container');
+            const willShow = (c.style.display !== 'block'); 
+            c.style.display = willShow ? 'block' : 'none';
+            if (willShow) {
+                setTimeout(() => {
+                    const scrollDiv = document.querySelector('.config-table-scroll');
+                    if (scrollDiv) {
+                        scrollDiv.scrollTop = scrollDiv.scrollHeight;
+                    }
+                }, 10);
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('modifierTableBody');
+            tbody.innerHTML = '';
+            modifiers.forEach((mod, index) => {
+                const colors = colorPalette[index % colorPalette.length];
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="text-align:center; font-weight:500;">${index+1}</td>
+                    <td><div style="display:flex;align-items:center;"><span class="color-dot" style="background-color:${colors.text}"></span>
+                    <input type="text" value="${mod.text.replace(/"/g, '&quot;')}" class="mod-text"></div></td>
+                    <td><select class="mod-weight">
+                        <option value="1" ${mod.weight==1?'selected':''}>1</option>
+                        <option value="2" ${mod.weight==2?'selected':''}>2</option>
+                        <option value="3" ${mod.weight==3?'selected':''}>3</option>
+                    </select></td>
+                    <td style="text-align:center;"><span style="color:#e53e3e;font-size:18px;cursor:pointer;" onclick="removeRow(${index})">×</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function syncTableToModifiers() {
+            const texts = document.querySelectorAll('.mod-text');
+            const weights = document.querySelectorAll('.mod-weight');
+            const currentMods = [];
+            for(let i = 0; i < texts.length; i++) {
+                currentMods.push({ 
+                    text: texts[i].value,               
+                    weight: parseInt(weights[i].value) 
+                });
+            }
+            modifiers = currentMods;
+        }
+
+        function addRow() {
+            syncTableToModifiers();                     
+            modifiers.push({ text: '', weight: 1 });
+            renderTable();
+
+            setTimeout(() => {
+                const scrollDiv = document.querySelector('.config-table-scroll');
+                if (scrollDiv) {
+                    scrollDiv.scrollTop = scrollDiv.scrollHeight;
+                }
+            }, 10);
+        }
+
+        function removeRow(index) {
+            syncTableToModifiers();                     
+            modifiers.splice(index, 1);                 
+            renderTable();
+        }
+
+        // 新增：清空所有配置
+        function clearAllConfig() {
+            if(confirm("确定要清空所有填写的词条吗？")) {
+                modifiers = [];
+                renderTable();
+            }
+        }
+
+        function saveConfig() {
+            triggerProb = parseFloat(document.getElementById('triggerProbInput').value) || 0;
+            const texts = document.querySelectorAll('.mod-text');
+            const weights = document.querySelectorAll('.mod-weight');
+            const newMod = [];
+            for(let i = 0; i < texts.length; i++) { 
+                const val = texts[i].value.trim();
+                if (val !== "") newMod.push({ text: val, weight: parseInt(weights[i].value) });
+            }
+            modifiers = newMod;
+            localStorage.setItem('challenge_trigger_prob_v7', triggerProb);
+            localStorage.setItem('challenge_modifiers_v7', JSON.stringify(modifiers));
+            renderTable();                     
+
+            showToast('✓ 保存完毕', 5000);
+            document.getElementById('config-container').style.display = 'none';
+        }
+
+        function exportConfig() {
+            const compactData = { 
+                p: triggerProb, 
+                m: modifiers.map(({ text, weight }) => [text, weight]) 
+            };
+            const jsonStr = JSON.stringify(compactData);
+            const encoded = btoa(unescape(encodeURIComponent(jsonStr)));
+            const el = document.createElement("textarea");
+            el.value = encoded;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand("copy");
+            document.body.removeChild(el);
+            alert("已复制紧凑配置");
+        }
+
+        function importConfig() {
+            const str = prompt("粘贴配置："); 
+            if (!str) return;
+            try {
+                const raw = JSON.parse(decodeURIComponent(escape(atob(str))));
+                let newTriggerProb, newModifiers;
+
+                if (raw.triggerProb !== undefined && Array.isArray(raw.modifiers)) {
+                    newTriggerProb = raw.triggerProb;
+                    newModifiers = raw.modifiers;
+                } else if (raw.p !== undefined && Array.isArray(raw.m)) {
+                    newTriggerProb = raw.p;
+                    newModifiers = raw.m.map(item => ({ text: item[0], weight: item[1] }));
+                } else {
+                    throw new Error('无法识别的配置格式');
+                }
+
+                triggerProb = newTriggerProb;
+                modifiers = newModifiers;
+
+                updateConfigUI();
+                renderTable();
+                saveConfig(); 
+            } catch (e) {
+                alert("无效配置或解析失败");
+                console.error(e);
+            }
+        }
+
+        function exportToFile() {
+            const compactData = { 
+                p: triggerProb, 
+                m: modifiers.map(({ text, weight }) => [text, weight]) 
+            };
+            const jsonStr = JSON.stringify(compactData, null, 2); 
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `随机抽取配置_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('📥 配置文件已下载', 3000);
+        }
+
+        function importFromFile() {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = '.json,application/json';
+            fileInput.style.display = 'none';
+            document.body.appendChild(fileInput);
+
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) {
+                    document.body.removeChild(fileInput);
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    try {
+                        const raw = JSON.parse(ev.target.result);
+                        let newTriggerProb, newModifiers;
+
+                        if (raw.triggerProb !== undefined && Array.isArray(raw.modifiers)) {
+                            newTriggerProb = raw.triggerProb;
+                            newModifiers = raw.modifiers;
+                        } else if (raw.p !== undefined && Array.isArray(raw.m)) {
+                            newTriggerProb = raw.p;
+                            newModifiers = raw.m.map(item => ({ text: item[0], weight: item[1] }));
+                        } else {
+                            throw new Error('文件格式不正确');
+                        }
+
+                        triggerProb = newTriggerProb;
+                        modifiers = newModifiers;
+
+                        updateConfigUI();
+                        renderTable();
+                        saveConfig();  
+                        showToast('📂 配置已导入并保存', 5000);
+                    } catch (err) {
+                        alert('解析文件失败：' + err.message);
+                    } finally {
+                        document.body.removeChild(fileInput);
+                    }
+                };
+                reader.readAsText(file);
+            });
+
+            fileInput.click();
+        }
+
+        // 语音朗读功能
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // 停止上一段未读完的语音
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-CN';
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 抽取主逻辑（去除了复杂的累积逻辑）
+        function generateResults() {
+            const rollBtn = document.getElementById('rollBtn');
+            let tMod = null, modIndex = -1;
+
+            if (Math.random() * 100 <= triggerProb && modifiers.length > 0) {
+                // 构建候选列表：排除最近10次出现过的词条
+                let candidates = modifiers.filter(mod => !recentHistory.includes(mod.text));
+                if (candidates.length === 0) {
+                    candidates = modifiers; // 全部被排除，则允许重复
+                }
+                // 按权重随机抽取
+                let totalWeight = candidates.reduce((sum, m) => sum + m.weight, 0);
+                let r = Math.random() * totalWeight;
+                for (let i = 0; i < candidates.length; i++) {
+                    if (r < candidates[i].weight) {
+                        tMod = candidates[i];
+                        modIndex = modifiers.findIndex(m => m.text === tMod.text);
+                        break;
+                    }
+                    r -= candidates[i].weight;
+                }
+            }
+
+            const mEl = document.getElementById('res-modifier');
+
+            if (tMod === null) {
+                // 未触发
+                mEl.innerText = '【无】';
+                mEl.style = '';
+                mEl.className = 'modifier-result mod-none';
+                addHistory(null, -1);
+                speakText("无");
+                return;
+            }
+
+            // ---------- 有词条抽取结果 ----------
+            const colors = colorPalette[modIndex % colorPalette.length];
+            mEl.innerText = tMod.text;
+            mEl.className = 'modifier-result';
+            mEl.style.color = colors.text;
+            mEl.style.backgroundColor = colors.bg;
+            mEl.style.border = `2px dashed ${colors.border}`;
+
+            addHistory(tMod, modIndex);
+            
+            // 触发语音朗读
+            speakText(tMod.text);
+        }
+
+        function addHistory(m, modIndex) {
+            const tbody = document.getElementById('history-body');
+            const tr = document.createElement('tr');
+            const time = new Date().toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false });
+            let mHtml = m ? `<span style="color:${colorPalette[modIndex % colorPalette.length].text}; font-weight:bold;">${m.text}</span>` : '<span style="color:#a0aec0;">无</span>';
+            tr.innerHTML = `<td>${time}</td><td>${mHtml}</td>`;
+            tbody.insertBefore(tr, tbody.firstChild);
+
+            if (m) {
+                recentHistory.push(m.text);
+                if (recentHistory.length > 10) recentHistory.shift();
+            }
+        }
+
+        function clearHistory() { 
+            if(confirm("清空记录？")) {
+                document.getElementById('history-body').innerHTML = '';
+                recentHistory = [];
+            }
+        }
+    </script>
+</body>
+</html>
