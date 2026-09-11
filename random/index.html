@@ -21,7 +21,7 @@
             min-height: 100vh;
         }
 
-        /* 标题栏 */
+        /* 标题栏 - 留出更多呼吸感 */
         .title-wrapper {
             display: flex;
             align-items: center;
@@ -29,13 +29,17 @@
             position: relative;
             width: 100%;
             max-width: 500px;
-            margin-bottom: 15px;
+            margin: 15px 0 25px 0;
+            padding: 0 45px;
         }
         .title-wrapper h2 {
             color: #1a202c;
             margin: 0;
             font-size: 1.5rem;
             font-weight: 800;
+            letter-spacing: 1px;
+            line-height: 1.4;
+            text-align: center;
         }
         
         .settings-btn {
@@ -54,13 +58,13 @@
             border: 1px solid #eee;
         }
 
-        /* 主抽取按钮 */
+        /* 主抽取按钮 - 暗红配色 */
         .btn-group { width: 100%; max-width: 500px; margin-bottom: 12px; }
         #rollBtn {
             width: 100%; padding: 15px; font-size: 18px; font-weight: bold; color: #fff;
-            background: linear-gradient(135deg, #0984e3 0%, #0097e6 100%);
+            background: linear-gradient(135deg, #5c2227 0%, #4a191e 100%);
             border: none; border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(9, 132, 227, 0.2);
+            box-shadow: 0 4px 14px rgba(74, 25, 30, 0.35);
             cursor: pointer;
             transition: all 0.1s ease;
             white-space: nowrap;
