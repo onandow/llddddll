@@ -21,7 +21,7 @@
             min-height: 100vh;
         }
 
-        /* 标题栏 - 更加紧凑 */
+        /* 标题栏 */
         .title-wrapper {
             display: flex;
             align-items: center;
@@ -54,7 +54,7 @@
             border: 1px solid #eee;
         }
 
-        /* 主抽取按钮 - 减小高度 */
+        /* 主抽取按钮 */
         .btn-group { width: 100%; max-width: 500px; margin-bottom: 12px; }
         #rollBtn {
             width: 100%; padding: 15px; font-size: 18px; font-weight: bold; color: #fff;
@@ -76,7 +76,7 @@
             border: 1px solid #f0f0f0;
         }
 
-        /* 结果显示 - 减小内边距 */
+        /* 结果显示 */
         .modifier-result {
             font-size: 19px; font-weight: bold; padding: 15px;
             border-radius: 10px; text-align: center; min-height: 60px; 
@@ -89,10 +89,11 @@
         .setting-block { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #edf2f7; }
         .setting-title { font-weight: bold; margin-bottom: 8px; display: block; color: #4a5568; font-size: 13px; }
 
-        .trigger-prob { display: flex; align-items: center; justify-content: space-between; }
-        .trigger-prob input { width: 60px; height: 32px; border: 1px solid #ddd; border-radius: 6px; text-align: center; }
+        .setting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .setting-row:last-child { margin-bottom: 0; }
+        .setting-row input[type="number"] { width: 60px; height: 32px; border: 1px solid #ddd; border-radius: 6px; text-align: center; }
 
-        /* 可滚动表格容器，固定高度 */
+        /* 可滚动表格容器 */
         .config-table-scroll {
             max-height: 300px;
             overflow-y: auto;
@@ -177,9 +178,22 @@
     </div>
 
     <div class="card-container" id="config-container">
-        <div class="setting-block trigger-prob">
-            <span class="setting-title">触发概率</span>
-            <div><input type="number" id="triggerProbInput" value="100"> %</div>
+        <!-- 全局设置项 -->
+        <div class="setting-block">
+            <div class="setting-row">
+                <span class="setting-title" style="margin-bottom:0;">触发概率</span>
+                <div><input type="number" id="triggerProbInput" value="100"> %</div>
+            </div>
+            <div class="setting-row" style="margin-top: 8px;">
+                <span class="setting-title" style="margin-bottom:0;">防重复次数</span>
+                <div><input type="number" id="antiRepeatLimitInput" value="10" min="0"> 次</div>
+            </div>
+            <div class="setting-row" style="margin-top: 8px;">
+                <span class="setting-title" style="margin-bottom:0;">语音功能</span>
+                <label style="cursor:pointer; font-size:13px;">
+                    <input type="checkbox" id="ttsToggle" checked> 启用朗读
+                </label>
+            </div>
         </div>
         
         <div class="setting-block" style="border-bottom:none; padding-bottom:0">
@@ -265,6 +279,10 @@
         ];
 
         let triggerProb = 100;
+        let antiRepeatLimit = 10;
+        let enableTTS = true;
+        let useWeight = true;
+
         let modifiers = [
             { text: '问题1', weight: 1 },
             { text: '问题2', weight: 1 },
@@ -272,18 +290,24 @@
         ];
 
         let recentHistory = [];
-        let useWeight = true; // 权重开关状态
 
         window.onload = () => {
             const savedTriggerProb = localStorage.getItem('challenge_trigger_prob_v7');
             const savedModifiers = localStorage.getItem('challenge_modifiers_v7');
             const savedUseWeight = localStorage.getItem('challenge_use_weight_v7');
+            const savedAntiRepeat = localStorage.getItem('challenge_anti_repeat_v7');
+            const savedTTS = localStorage.getItem('challenge_tts_v7');
 
             if (savedTriggerProb !== null) triggerProb = parseFloat(savedTriggerProb);
             if (savedModifiers) modifiers = JSON.parse(savedModifiers);
             if (savedUseWeight !== null) useWeight = (savedUseWeight === 'true');
+            if (savedAntiRepeat !== null) antiRepeatLimit = parseInt(savedAntiRepeat, 10);
+            if (savedTTS !== null) enableTTS = (savedTTS === 'true');
 
             document.getElementById('useWeightToggle').checked = useWeight;
+            document.getElementById('ttsToggle').checked = enableTTS;
+            document.getElementById('antiRepeatLimitInput').value = antiRepeatLimit;
+
             updateConfigUI();
             renderTable();
 
@@ -302,7 +326,9 @@
             }, duration);
         }
 
-        function updateConfigUI() { document.getElementById('triggerProbInput').value = triggerProb; }
+        function updateConfigUI() { 
+            document.getElementById('triggerProbInput').value = triggerProb; 
+        }
 
         function toggleConfig() {
             const c = document.getElementById('config-container');
@@ -318,7 +344,6 @@
             }
         }
 
-        // 切换权重显隐
         function toggleWeightUI() {
             useWeight = document.getElementById('useWeightToggle').checked;
             renderTable();
@@ -328,7 +353,6 @@
             const tbody = document.getElementById('modifierTableBody');
             tbody.innerHTML = '';
             
-            // 根据开关控制表头显示
             document.getElementById('weightTh').style.display = useWeight ? 'table-cell' : 'none';
 
             modifiers.forEach((mod, index) => {
@@ -388,7 +412,6 @@
             }
         }
 
-        // 新增：文本框批量导入逻辑
         function bulkImportText() {
             const txt = document.getElementById('bulkText').value;
             if (!txt.trim()) {
@@ -401,28 +424,25 @@
             modifiers = [];
 
             lines.forEach(line => {
-                // 正则：去除行首的空格、数字、点号，然后去首尾空白符
-                // 例如 "1. 挨顿毒打" 会变成 "挨顿毒打"
                 let cleanedLine = line.replace(/^\s*\d+\.\s*/, '').trim();
-                
                 if (cleanedLine) {
                     modifiers.push({ text: cleanedLine, weight: 1 });
                 }
             });
 
-            document.getElementById('bulkText').value = ''; // 清空文本框
+            document.getElementById('bulkText').value = '';
             renderTable();
-            saveConfig(false); // 自动保存但不关闭面板
+            saveConfig(false);
             showToast(`✅ 成功导入 ${modifiers.length} 个词条！`);
             
-            // 自动滚到顶部方便查看
             const scrollDiv = document.querySelector('.config-table-scroll');
             if (scrollDiv) scrollDiv.scrollTop = 0;
         }
 
-        // 修改保存逻辑以记录权重开关状态
         function saveConfig(closePanel = true) {
             triggerProb = parseFloat(document.getElementById('triggerProbInput').value) || 0;
+            antiRepeatLimit = Math.max(0, parseInt(document.getElementById('antiRepeatLimitInput').value, 10) || 0);
+            enableTTS = document.getElementById('ttsToggle').checked;
             useWeight = document.getElementById('useWeightToggle').checked;
             
             const texts = document.querySelectorAll('.mod-text');
@@ -433,7 +453,15 @@
                 if (val !== "") newMod.push({ text: val, weight: parseInt(weights[i].value) });
             }
             modifiers = newMod;
+
+            // 裁切最近历史以适应新的防重上限
+            if (recentHistory.length > antiRepeatLimit) {
+                recentHistory = recentHistory.slice(-antiRepeatLimit);
+            }
+
             localStorage.setItem('challenge_trigger_prob_v7', triggerProb);
+            localStorage.setItem('challenge_anti_repeat_v7', antiRepeatLimit);
+            localStorage.setItem('challenge_tts_v7', enableTTS);
             localStorage.setItem('challenge_modifiers_v7', JSON.stringify(modifiers));
             localStorage.setItem('challenge_use_weight_v7', useWeight);
             renderTable();                     
@@ -448,6 +476,8 @@
             const compactData = { 
                 p: triggerProb, 
                 w: useWeight,
+                ar: antiRepeatLimit,
+                tts: enableTTS,
                 m: modifiers.map(({ text, weight }) => [text, weight]) 
             };
             const jsonStr = JSON.stringify(compactData);
@@ -467,11 +497,12 @@
             try {
                 const raw = JSON.parse(decodeURIComponent(escape(atob(str))));
                 
-                // 兼容带权重的旧版本配置或新版本
                 if (raw.p !== undefined && Array.isArray(raw.m)) {
                     triggerProb = raw.p;
                     modifiers = raw.m.map(item => ({ text: item[0], weight: item[1] }));
                     if(raw.w !== undefined) useWeight = raw.w;
+                    if(raw.ar !== undefined) antiRepeatLimit = raw.ar;
+                    if(raw.tts !== undefined) enableTTS = raw.tts;
                 } else if (raw.triggerProb !== undefined && Array.isArray(raw.modifiers)) {
                     triggerProb = raw.triggerProb;
                     modifiers = raw.modifiers;
@@ -480,6 +511,9 @@
                 }
 
                 document.getElementById('useWeightToggle').checked = useWeight;
+                document.getElementById('ttsToggle').checked = enableTTS;
+                document.getElementById('antiRepeatLimitInput').value = antiRepeatLimit;
+
                 updateConfigUI();
                 renderTable();
                 saveConfig(); 
@@ -493,6 +527,8 @@
             const compactData = { 
                 p: triggerProb, 
                 w: useWeight,
+                ar: antiRepeatLimit,
+                tts: enableTTS,
                 m: modifiers.map(({ text, weight }) => [text, weight]) 
             };
             const jsonStr = JSON.stringify(compactData, null, 2); 
@@ -531,6 +567,8 @@
                             triggerProb = raw.p;
                             modifiers = raw.m.map(item => ({ text: item[0], weight: item[1] }));
                             if(raw.w !== undefined) useWeight = raw.w;
+                            if(raw.ar !== undefined) antiRepeatLimit = raw.ar;
+                            if(raw.tts !== undefined) enableTTS = raw.tts;
                         } else if (raw.triggerProb !== undefined && Array.isArray(raw.modifiers)) {
                             triggerProb = raw.triggerProb;
                             modifiers = raw.modifiers;
@@ -539,6 +577,9 @@
                         }
 
                         document.getElementById('useWeightToggle').checked = useWeight;
+                        document.getElementById('ttsToggle').checked = enableTTS;
+                        document.getElementById('antiRepeatLimitInput').value = antiRepeatLimit;
+
                         updateConfigUI();
                         renderTable();
                         saveConfig();  
@@ -554,8 +595,9 @@
             fileInput.click();
         }
 
-        // 语音朗读功能
+        // 语音朗读功能（受开关控制）
         function speakText(text) {
+            if (!enableTTS) return;
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
@@ -564,18 +606,21 @@
             }
         }
 
-        // 抽取主逻辑（引入权重开关判定）
+        // 抽取主逻辑
         function generateResults() {
             const rollBtn = document.getElementById('rollBtn');
             let tMod = null, modIndex = -1;
 
             if (Math.random() * 100 <= triggerProb && modifiers.length > 0) {
-                let candidates = modifiers.filter(mod => !recentHistory.includes(mod.text));
-                if (candidates.length === 0) {
-                    candidates = modifiers;
+                // 根据填写的防重复限制过滤候选
+                let candidates = modifiers;
+                if (antiRepeatLimit > 0) {
+                    candidates = modifiers.filter(mod => !recentHistory.includes(mod.text));
+                    if (candidates.length === 0) {
+                        candidates = modifiers; // 全被过滤则重置候选池
+                    }
                 }
                 
-                // 如果权重关闭，所有选项视为权重为 1
                 let totalWeight = candidates.reduce((sum, m) => sum + (useWeight ? m.weight : 1), 0);
                 let r = Math.random() * totalWeight;
                 
@@ -620,9 +665,11 @@
             tr.innerHTML = `<td>${time}</td><td>${mHtml}</td>`;
             tbody.insertBefore(tr, tbody.firstChild);
 
-            if (m) {
+            if (m && antiRepeatLimit > 0) {
                 recentHistory.push(m.text);
-                if (recentHistory.length > 10) recentHistory.shift();
+                if (recentHistory.length > antiRepeatLimit) {
+                    recentHistory.shift();
+                }
             }
         }
 
