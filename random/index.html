@@ -201,12 +201,8 @@
     </div>
 
     <div class="card-container" id="config-container">
-        <!-- 基础设置项：4行统一高度与对齐，无分割线 -->
+        <!-- 基础设置项：已去掉触发概率 -->
         <div class="setting-block">
-            <div class="setting-row">
-                <span class="setting-title">触发概率</span>
-                <div class="setting-ctrl"><input type="number" id="triggerProbInput" value="100">&nbsp;%</div>
-            </div>
             <div class="setting-row">
                 <span class="setting-title">防重复次数</span>
                 <div class="setting-ctrl"><input type="number" id="antiRepeatLimitInput" value="10" min="0">&nbsp;次</div>
@@ -254,7 +250,7 @@
         </div>
         <div class="reminder-text">记得保存 记得保存 记得保存</div>
 
-        <!-- 批量覆盖导入模块（文本框已换行提示） -->
+        <!-- 批量覆盖导入模块 -->
         <div class="setting-block" style="margin-top:12px; margin-bottom:0;">
             <textarea id="bulkText" rows="4" style="width:100%; border:1px solid #ddd; border-radius:6px; padding:8px; font-size:12px; line-height:1.5; resize:vertical;" placeholder="在此粘贴多行文本（每行一个选项）。&#10;导入时会自动去除开头的序号（如 '1. '）"></textarea>
             <button class="io-btn" onclick="bulkImportText()" style="width:100%; margin-top:6px; background:#e6fffa; color:#049f7e; border:none; padding:8px; font-weight:bold; font-size:13px;">📋 文本覆盖导入</button>
@@ -306,7 +302,6 @@
             { text: '#d35400', bg: '#fff2e6', border: '#e67e22' }
         ];
 
-        let triggerProb = 100;
         let antiRepeatLimit = 10;
         let enableTTS = true;
         let useWeight = true;
@@ -320,13 +315,11 @@
         let recentHistory = [];
 
         window.onload = () => {
-            const savedTriggerProb = localStorage.getItem('challenge_trigger_prob_v7');
             const savedModifiers = localStorage.getItem('challenge_modifiers_v7');
             const savedUseWeight = localStorage.getItem('challenge_use_weight_v7');
             const savedAntiRepeat = localStorage.getItem('challenge_anti_repeat_v7');
             const savedTTS = localStorage.getItem('challenge_tts_v7');
 
-            if (savedTriggerProb !== null) triggerProb = parseFloat(savedTriggerProb);
             if (savedModifiers) modifiers = JSON.parse(savedModifiers);
             if (savedUseWeight !== null) useWeight = (savedUseWeight === 'true');
             if (savedAntiRepeat !== null) antiRepeatLimit = parseInt(savedAntiRepeat, 10);
@@ -336,9 +329,7 @@
             document.getElementById('ttsToggle').checked = enableTTS;
             document.getElementById('antiRepeatLimitInput').value = antiRepeatLimit;
 
-            updateConfigUI();
             renderTable();
-
             document.getElementById('rollBtn').innerText = '随一下';
         };
 
@@ -352,10 +343,6 @@
             setTimeout(() => {
                 if (toast.parentNode) toast.remove();
             }, duration);
-        }
-
-        function updateConfigUI() { 
-            document.getElementById('triggerProbInput').value = triggerProb; 
         }
 
         function toggleConfig() {
@@ -468,7 +455,6 @@
         }
 
         function saveConfig(closePanel = true) {
-            triggerProb = parseFloat(document.getElementById('triggerProbInput').value) || 0;
             antiRepeatLimit = Math.max(0, parseInt(document.getElementById('antiRepeatLimitInput').value, 10) || 0);
             enableTTS = document.getElementById('ttsToggle').checked;
             useWeight = document.getElementById('useWeightToggle').checked;
@@ -486,7 +472,6 @@
                 recentHistory = recentHistory.slice(-antiRepeatLimit);
             }
 
-            localStorage.setItem('challenge_trigger_prob_v7', triggerProb);
             localStorage.setItem('challenge_anti_repeat_v7', antiRepeatLimit);
             localStorage.setItem('challenge_tts_v7', enableTTS);
             localStorage.setItem('challenge_modifiers_v7', JSON.stringify(modifiers));
@@ -501,7 +486,6 @@
 
         function exportConfig() {
             const compactData = { 
-                p: triggerProb, 
                 w: useWeight,
                 ar: antiRepeatLimit,
                 tts: enableTTS,
@@ -524,14 +508,12 @@
             try {
                 const raw = JSON.parse(decodeURIComponent(escape(atob(str))));
                 
-                if (raw.p !== undefined && Array.isArray(raw.m)) {
-                    triggerProb = raw.p;
+                if (Array.isArray(raw.m)) {
                     modifiers = raw.m.map(item => ({ text: item[0], weight: item[1] }));
                     if(raw.w !== undefined) useWeight = raw.w;
                     if(raw.ar !== undefined) antiRepeatLimit = raw.ar;
                     if(raw.tts !== undefined) enableTTS = raw.tts;
-                } else if (raw.triggerProb !== undefined && Array.isArray(raw.modifiers)) {
-                    triggerProb = raw.triggerProb;
+                } else if (Array.isArray(raw.modifiers)) {
                     modifiers = raw.modifiers;
                 } else {
                     throw new Error('无法识别的配置格式');
@@ -541,7 +523,6 @@
                 document.getElementById('ttsToggle').checked = enableTTS;
                 document.getElementById('antiRepeatLimitInput').value = antiRepeatLimit;
 
-                updateConfigUI();
                 renderTable();
                 saveConfig(); 
             } catch (e) {
@@ -552,7 +533,6 @@
 
         function exportToFile() {
             const compactData = { 
-                p: triggerProb, 
                 w: useWeight,
                 ar: antiRepeatLimit,
                 tts: enableTTS,
@@ -590,14 +570,12 @@
                     try {
                         const raw = JSON.parse(ev.target.result);
                         
-                        if (raw.p !== undefined && Array.isArray(raw.m)) {
-                            triggerProb = raw.p;
+                        if (Array.isArray(raw.m)) {
                             modifiers = raw.m.map(item => ({ text: item[0], weight: item[1] }));
                             if(raw.w !== undefined) useWeight = raw.w;
                             if(raw.ar !== undefined) antiRepeatLimit = raw.ar;
                             if(raw.tts !== undefined) enableTTS = raw.tts;
-                        } else if (raw.triggerProb !== undefined && Array.isArray(raw.modifiers)) {
-                            triggerProb = raw.triggerProb;
+                        } else if (Array.isArray(raw.modifiers)) {
                             modifiers = raw.modifiers;
                         } else {
                             throw new Error('文件格式不正确');
@@ -607,7 +585,6 @@
                         document.getElementById('ttsToggle').checked = enableTTS;
                         document.getElementById('antiRepeatLimitInput').value = antiRepeatLimit;
 
-                        updateConfigUI();
                         renderTable();
                         saveConfig();  
                         showToast('📂 配置已导入并保存', 5000);
@@ -633,45 +610,38 @@
             }
         }
 
-        // 抽取主逻辑
+        // 抽取主逻辑（100% 触发抽取）
         function generateResults() {
-            const rollBtn = document.getElementById('rollBtn');
-            let tMod = null, modIndex = -1;
-
-            if (Math.random() * 100 <= triggerProb && modifiers.length > 0) {
-                let candidates = modifiers;
-                if (antiRepeatLimit > 0) {
-                    candidates = modifiers.filter(mod => !recentHistory.includes(mod.text));
-                    if (candidates.length === 0) {
-                        candidates = modifiers;
-                    }
-                }
-                
-                let totalWeight = candidates.reduce((sum, m) => sum + (useWeight ? m.weight : 1), 0);
-                let r = Math.random() * totalWeight;
-                
-                for (let i = 0; i < candidates.length; i++) {
-                    let currentWeight = useWeight ? candidates[i].weight : 1;
-                    if (r < currentWeight) {
-                        tMod = candidates[i];
-                        modIndex = modifiers.findIndex(m => m.text === tMod.text);
-                        break;
-                    }
-                    r -= currentWeight;
-                }
-            }
-
-            const mEl = document.getElementById('res-modifier');
-
-            if (tMod === null) {
-                mEl.innerText = '【无】';
-                mEl.style = '';
-                mEl.className = 'modifier-result mod-none';
-                addHistory(null, -1);
-                speakText("无");
+            if (modifiers.length === 0) {
+                showToast("⚠️ 当前词条列表为空，请先在设置中添加词条");
                 return;
             }
 
+            let candidates = modifiers;
+            if (antiRepeatLimit > 0) {
+                candidates = modifiers.filter(mod => !recentHistory.includes(mod.text));
+                if (candidates.length === 0) {
+                    candidates = modifiers;
+                }
+            }
+            
+            let totalWeight = candidates.reduce((sum, m) => sum + (useWeight ? m.weight : 1), 0);
+            let r = Math.random() * totalWeight;
+            let tMod = candidates[0];
+            
+            for (let i = 0; i < candidates.length; i++) {
+                let currentWeight = useWeight ? candidates[i].weight : 1;
+                if (r < currentWeight) {
+                    tMod = candidates[i];
+                    break;
+                }
+                r -= currentWeight;
+            }
+
+            let modIndex = modifiers.findIndex(m => m.text === tMod.text);
+            if (modIndex === -1) modIndex = 0;
+
+            const mEl = document.getElementById('res-modifier');
             const colors = colorPalette[modIndex % colorPalette.length];
             mEl.innerText = tMod.text;
             mEl.className = 'modifier-result';
@@ -687,11 +657,11 @@
             const tbody = document.getElementById('history-body');
             const tr = document.createElement('tr');
             const time = new Date().toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false });
-            let mHtml = m ? `<span style="color:${colorPalette[modIndex % colorPalette.length].text}; font-weight:bold;">${m.text}</span>` : '<span style="color:#a0aec0;">无</span>';
+            let mHtml = `<span style="color:${colorPalette[modIndex % colorPalette.length].text}; font-weight:bold;">${m.text}</span>`;
             tr.innerHTML = `<td>${time}</td><td>${mHtml}</td>`;
             tbody.insertBefore(tr, tbody.firstChild);
 
-            if (m && antiRepeatLimit > 0) {
+            if (antiRepeatLimit > 0) {
                 recentHistory.push(m.text);
                 if (recentHistory.length > antiRepeatLimit) {
                     recentHistory.shift();
