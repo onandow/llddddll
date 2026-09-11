@@ -58,20 +58,23 @@
             border: 1px solid #eee;
         }
 
-        /* 主抽取按钮 - 暗红配色 */
+        /* 主抽取按钮 - #810000 配色 */
         .btn-group { width: 100%; max-width: 500px; margin-bottom: 12px; }
         #rollBtn {
             width: 100%; padding: 15px; font-size: 18px; font-weight: bold; color: #fff;
-            background: linear-gradient(135deg, #5c2227 0%, #4a191e 100%);
+            background: #810000;
             border: none; border-radius: 12px;
-            box-shadow: 0 4px 14px rgba(74, 25, 30, 0.35);
+            box-shadow: 0 4px 14px rgba(129, 0, 0, 0.35);
             cursor: pointer;
             transition: all 0.1s ease;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        #rollBtn:active { transform: scale(0.98); }
+        #rollBtn:active { 
+            transform: scale(0.98); 
+            background: #6b0000;
+        }
 
         /* 容器卡片 */
         .card-container {
