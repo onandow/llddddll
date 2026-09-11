@@ -86,12 +86,34 @@
 
         /* 配置面板 */
         #config-container { display: none; padding: 12px; }
-        .setting-block { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #edf2f7; }
-        .setting-title { font-weight: bold; margin-bottom: 8px; display: block; color: #4a5568; font-size: 13px; }
+        .setting-block { margin-bottom: 12px; padding-bottom: 0; }
+        .setting-title { font-weight: bold; margin-bottom: 0; display: block; color: #4a5568; font-size: 13px; }
 
-        .setting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        /* 统一高度与垂直居中对齐 */
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 36px;
+            margin-bottom: 8px;
+        }
         .setting-row:last-child { margin-bottom: 0; }
-        .setting-row input[type="number"] { width: 60px; height: 32px; border: 1px solid #ddd; border-radius: 6px; text-align: center; }
+        .setting-row input[type="number"] { width: 60px; height: 32px; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-size: 13px; }
+        .setting-row .setting-ctrl {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            min-height: 32px;
+            font-size: 13px;
+        }
+        .setting-row label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            user-select: none;
+            font-size: 13px;
+        }
 
         /* 可滚动表格容器 */
         .config-table-scroll {
@@ -100,6 +122,7 @@
             border: 1px solid #edf2f7;
             border-radius: 8px;
             background: white;
+            margin-top: 8px;
         }
 
         .config-table { width: 100%; border-collapse: collapse; }
@@ -178,32 +201,37 @@
     </div>
 
     <div class="card-container" id="config-container">
-        <!-- 全局设置项 -->
+        <!-- 基础设置项：4行统一高度与对齐，无分割线 -->
         <div class="setting-block">
             <div class="setting-row">
-                <span class="setting-title" style="margin-bottom:0;">触发概率</span>
-                <div><input type="number" id="triggerProbInput" value="100"> %</div>
+                <span class="setting-title">触发概率</span>
+                <div class="setting-ctrl"><input type="number" id="triggerProbInput" value="100">&nbsp;%</div>
             </div>
-            <div class="setting-row" style="margin-top: 8px;">
-                <span class="setting-title" style="margin-bottom:0;">防重复次数</span>
-                <div><input type="number" id="antiRepeatLimitInput" value="10" min="0"> 次</div>
+            <div class="setting-row">
+                <span class="setting-title">防重复次数</span>
+                <div class="setting-ctrl"><input type="number" id="antiRepeatLimitInput" value="10" min="0">&nbsp;次</div>
             </div>
-            <div class="setting-row" style="margin-top: 8px;">
-                <span class="setting-title" style="margin-bottom:0;">语音功能</span>
-                <label style="cursor:pointer; font-size:13px;">
-                    <input type="checkbox" id="ttsToggle" checked> 启用朗读
-                </label>
+            <div class="setting-row">
+                <span class="setting-title">语音功能</span>
+                <div class="setting-ctrl">
+                    <label>
+                        <input type="checkbox" id="ttsToggle" checked> 启用朗读
+                    </label>
+                </div>
+            </div>
+            <div class="setting-row">
+                <span class="setting-title">词条权重</span>
+                <div class="setting-ctrl">
+                    <label>
+                        <input type="checkbox" id="useWeightToggle" onchange="toggleWeightUI()"> 启用权重
+                    </label>
+                </div>
             </div>
         </div>
         
-        <div class="setting-block" style="border-bottom:none; padding-bottom:0">
-            <!-- 带有权重开关的标题栏 -->
-            <span class="setting-title" style="display:flex; justify-content:space-between;">
-                <span>词条设置</span>
-                <label style="font-weight:normal; cursor:pointer;">
-                    <input type="checkbox" id="useWeightToggle" onchange="toggleWeightUI()"> 启用权重
-                </label>
-            </span>
+        <!-- 词条表格区域 -->
+        <div class="setting-block" style="margin-top: 10px;">
+            <span class="setting-title">词条列表</span>
             <div style="overflow-x:auto;" class="config-table-scroll">
                 <table class="config-table">
                     <thead>
@@ -226,9 +254,9 @@
         </div>
         <div class="reminder-text">记得保存 记得保存 记得保存</div>
 
-        <!-- 批量覆盖导入模块 -->
-        <div class="setting-block" style="margin-top:12px; padding-bottom:0; border-bottom:none;">
-            <textarea id="bulkText" rows="4" style="width:100%; border:1px solid #ddd; border-radius:4px; padding:6px; font-size:12px; resize:vertical;" placeholder="在此粘贴多行文本（每行一个选项）。导入时会自动去除开头的序号（如 '1. '）"></textarea>
+        <!-- 批量覆盖导入模块（文本框已换行提示） -->
+        <div class="setting-block" style="margin-top:12px; margin-bottom:0;">
+            <textarea id="bulkText" rows="4" style="width:100%; border:1px solid #ddd; border-radius:6px; padding:8px; font-size:12px; line-height:1.5; resize:vertical;" placeholder="在此粘贴多行文本（每行一个选项）。&#10;导入时会自动去除开头的序号（如 '1. '）"></textarea>
             <button class="io-btn" onclick="bulkImportText()" style="width:100%; margin-top:6px; background:#e6fffa; color:#049f7e; border:none; padding:8px; font-weight:bold; font-size:13px;">📋 文本覆盖导入</button>
         </div>
 
@@ -454,7 +482,6 @@
             }
             modifiers = newMod;
 
-            // 裁切最近历史以适应新的防重上限
             if (recentHistory.length > antiRepeatLimit) {
                 recentHistory = recentHistory.slice(-antiRepeatLimit);
             }
@@ -595,7 +622,7 @@
             fileInput.click();
         }
 
-        // 语音朗读功能（受开关控制）
+        // 语音朗读功能
         function speakText(text) {
             if (!enableTTS) return;
             if ('speechSynthesis' in window) {
@@ -612,12 +639,11 @@
             let tMod = null, modIndex = -1;
 
             if (Math.random() * 100 <= triggerProb && modifiers.length > 0) {
-                // 根据填写的防重复限制过滤候选
                 let candidates = modifiers;
                 if (antiRepeatLimit > 0) {
                     candidates = modifiers.filter(mod => !recentHistory.includes(mod.text));
                     if (candidates.length === 0) {
-                        candidates = modifiers; // 全被过滤则重置候选池
+                        candidates = modifiers;
                     }
                 }
                 
