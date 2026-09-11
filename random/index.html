@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>随机🍌</title>
+    <title>随机🍌工具</title>
     <!-- 香蕉 Emoji Icon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍌</text></svg>">
     <style>
@@ -188,7 +188,7 @@
 <body>
 
     <div class="title-wrapper">
-        <h2>随机模拟器</h2>
+        <h2>在冰箱里随便拿出一个…</h2>
         <div class="settings-btn" onclick="toggleConfig()">⚙️</div>
     </div>
 
@@ -201,6 +201,7 @@
     </div>
 
     <div class="card-container" id="config-container">
+        <!-- 基础设置项 -->
         <div class="setting-block">
             <div class="setting-row">
                 <span class="setting-title">防重复次数</span>
@@ -329,7 +330,7 @@
             document.getElementById('antiRepeatLimitInput').value = antiRepeatLimit;
 
             renderTable();
-            document.getElementById('rollBtn').innerText = '随一下';
+            document.getElementById('rollBtn').innerText = 'Gacha!!';
         };
 
         function showToast(msg, duration = 5000) {
@@ -609,7 +610,7 @@
             }
         }
 
-        // 抽取主逻辑（100% 触发抽取）
+        // 抽取主逻辑
         function generateResults() {
             if (modifiers.length === 0) {
                 showToast("⚠️ 当前词条列表为空，请先在设置中添加词条");
