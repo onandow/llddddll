@@ -7,12 +7,66 @@
     <!-- 香蕉 Emoji Icon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍌</text></svg>">
     <style>
-        /* 全局样式重置 */
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        :root {
+            /* 日间沉稳模式 */
+            --bg-gradient: linear-gradient(135deg, #edeef2 0%, #e2e4e9 100%);
+            --card-bg: #ffffff;
+            --card-border: #e2e5ec;
+            --card-shadow: rgba(15, 23, 42, 0.05);
+            --text-main: #242933;
+            --text-muted: #5e6676;
+            --title-color: #1a1e26;
+            --icon-btn-bg: #ffffff;
+            --icon-btn-border: #d4d8e2;
+            --roll-btn-bg: #810000;
+            --roll-btn-active: #660000;
+            --roll-btn-shadow: rgba(129, 0, 0, 0.32);
+            --table-th-bg: #2b303c;
+            --table-th-text: #f1f3f7;
+            --table-border: #e9ecf2;
+            --input-bg: #ffffff;
+            --input-border: #cfd4df;
+            --io-btn-bg: #edf0f5;
+            --io-btn-text: #3d4452;
+            --io-btn-border: #d4d9e3;
+            --accent-btn-bg: #e5edf5;
+            --accent-btn-text: #2c3e50;
+            --footer-text: #8b93a3;
+        }
+
+        body.dark-mode {
+            /* 黑红沉稳高端夜间模式 */
+            --bg-gradient: radial-gradient(circle at 50% -20%, #200d11 0%, #0d0e11 65%, #08090b 100%);
+            --card-bg: #14161b;
+            --card-border: #2c1a1f;
+            --card-shadow: rgba(0, 0, 0, 0.6);
+            --text-main: #dfdfe6;
+            --text-muted: #9aa0b0;
+            --title-color: #f1e4e6;
+            --icon-btn-bg: #1d1e25;
+            --icon-btn-border: #3d232a;
+            --roll-btn-bg: linear-gradient(135deg, #87141f 0%, #520910 100%);
+            --roll-btn-active: #3d050a;
+            --roll-btn-shadow: rgba(135, 20, 31, 0.45);
+            --table-th-bg: #1d1316;
+            --table-th-text: #e6b8be;
+            --table-border: #262125;
+            --input-bg: #1c1d24;
+            --input-border: #422a30;
+            --io-btn-bg: #20222a;
+            --io-btn-text: #c0c4cf;
+            --io-btn-border: #353844;
+            --accent-btn-bg: #2f161b;
+            --accent-btn-text: #e28a95;
+            --footer-text: #626573;
+        }
+
+        /* 全局基础设置 */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            background: linear-gradient(135deg, #f6f9fc 0%, #eef2f7 100%);
-            color: #2d3748;
+            background: var(--bg-gradient);
+            color: var(--text-main);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -21,7 +75,7 @@
             min-height: 100vh;
         }
 
-        /* 标题栏 - 留出更多呼吸感 */
+        /* 标题栏 */
         .title-wrapper {
             display: flex;
             align-items: center;
@@ -30,73 +84,92 @@
             width: 100%;
             max-width: 500px;
             margin: 15px 0 25px 0;
-            padding: 0 45px;
+            padding: 0 85px 0 45px;
         }
         .title-wrapper h2 {
-            color: #1a202c;
+            color: var(--title-color);
             margin: 0;
-            font-size: 1.5rem;
+            font-size: 1.45rem;
             font-weight: 800;
-            letter-spacing: 1px;
+            letter-spacing: 1.2px;
             line-height: 1.4;
             text-align: center;
         }
         
-        .settings-btn {
+        .header-actions {
             position: absolute;
             right: 5px;
-            font-size: 18px;
+            display: flex;
+            gap: 6px;
+        }
+
+        .icon-btn {
+            font-size: 16px;
             cursor: pointer;
-            background: #ffffff;
-            border-radius: 10px;
+            background: var(--icon-btn-bg);
+            border-radius: 9px;
             width: 36px;
             height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            border: 1px solid #eee;
+            box-shadow: 0 2px 8px var(--card-shadow);
+            border: 1px solid var(--icon-btn-border);
+            color: var(--text-main);
+        }
+        .icon-btn:hover {
+            filter: brightness(1.1);
         }
 
-        /* 主抽取按钮 - #810000 配色 */
+        /* 主抽取按钮 */
         .btn-group { width: 100%; max-width: 500px; margin-bottom: 12px; }
         #rollBtn {
-            width: 100%; padding: 15px; font-size: 18px; font-weight: bold; color: #fff;
-            background: #810000;
+            width: 100%; padding: 15px; font-size: 18px; font-weight: 700; color: #fff;
+            background: var(--roll-btn-bg);
             border: none; border-radius: 12px;
-            box-shadow: 0 4px 14px rgba(129, 0, 0, 0.35);
+            box-shadow: 0 4px 15px var(--roll-btn-shadow);
             cursor: pointer;
-            transition: all 0.1s ease;
+            transition: transform 0.1s ease, filter 0.2s ease;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            letter-spacing: 1px;
         }
         #rollBtn:active { 
-            transform: scale(0.98); 
-            background: #6b0000;
+            transform: scale(0.985); 
+            background: var(--roll-btn-active);
         }
 
         /* 容器卡片 */
         .card-container {
-            width: 100%; max-width: 500px; background: #ffffff; padding: 12px;
-            border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 12px;
-            border: 1px solid #f0f0f0;
+            width: 100%; max-width: 500px; 
+            background: var(--card-bg); 
+            padding: 14px;
+            border-radius: 14px; 
+            box-shadow: 0 6px 18px var(--card-shadow); 
+            margin-bottom: 12px;
+            border: 1px solid var(--card-border);
         }
 
-        /* 结果显示 */
+        /* 结果卡片 */
         .modifier-result {
-            font-size: 19px; font-weight: bold; padding: 15px;
+            font-size: 18px; font-weight: 700; padding: 15px;
             border-radius: 10px; text-align: center; min-height: 60px; 
             display: flex; align-items: center; justify-content: center;
+            letter-spacing: 0.5px;
         }
-        .mod-none { color: #a0aec0; background-color: #f8fafc; border: 1px solid #e2e8f0; font-weight: normal; font-size: 15px; }
+        .mod-none { 
+            color: var(--text-muted); 
+            background-color: var(--input-bg); 
+            border: 1px solid var(--card-border); 
+            font-weight: 500; font-size: 15px; 
+        }
 
         /* 配置面板 */
-        #config-container { display: none; padding: 12px; }
-        .setting-block { margin-bottom: 12px; padding-bottom: 0; }
-        .setting-title { font-weight: bold; margin-bottom: 0; display: block; color: #4a5568; font-size: 13px; }
+        #config-container { display: none; }
+        .setting-block { margin-bottom: 12px; }
+        .setting-title { font-weight: 700; color: var(--text-muted); font-size: 13px; }
 
-        /* 统一高度与垂直居中对齐 */
         .setting-row {
             display: flex;
             align-items: center;
@@ -105,7 +178,13 @@
             margin-bottom: 8px;
         }
         .setting-row:last-child { margin-bottom: 0; }
-        .setting-row input[type="number"] { width: 60px; height: 32px; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-size: 13px; }
+        .setting-row input[type="number"] { 
+            width: 60px; height: 32px; 
+            background: var(--input-bg);
+            color: var(--text-main);
+            border: 1px solid var(--input-border); 
+            border-radius: 6px; text-align: center; font-size: 13px; 
+        }
         .setting-row .setting-ctrl {
             display: flex;
             align-items: center;
@@ -120,75 +199,94 @@
             cursor: pointer;
             user-select: none;
             font-size: 13px;
+            color: var(--text-main);
         }
 
-        /* 可滚动表格容器 */
+        /* 表格滚动容器 */
         .config-table-scroll {
-            max-height: 300px;
+            max-height: 280px;
             overflow-y: auto;
-            border: 1px solid #edf2f7;
+            border: 1px solid var(--card-border);
             border-radius: 8px;
-            background: white;
+            background: var(--card-bg);
             margin-top: 8px;
         }
 
         .config-table { width: 100%; border-collapse: collapse; }
-        .config-table th { background: #4a5568; color: white; padding: 8px 4px; font-size: 12px; position: sticky; top: 0; z-index: 1; }
-        .config-table td { padding: 6px 4px; border-bottom: 1px solid #eee; }
-        .config-table input, .config-table select { width: 100%; border: 1px solid #ddd; border-radius: 4px; padding: 6px; font-size: 12px; }
+        .config-table th { background: var(--table-th-bg); color: var(--table-th-text); padding: 8px 4px; font-size: 12px; position: sticky; top: 0; z-index: 1; }
+        .config-table td { padding: 6px 4px; border-bottom: 1px solid var(--table-border); }
+        .config-table input, .config-table select { 
+            width: 100%; 
+            background: var(--input-bg);
+            color: var(--text-main);
+            border: 1px solid var(--input-border); 
+            border-radius: 4px; padding: 6px; font-size: 12px; 
+        }
         
-        .color-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
+        .color-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; flex-shrink: 0; }
 
         .action-btns { display: flex; gap: 8px; margin-top: 10px; }
-        .add-btn { flex: 1; background: #e6fffa; color: #049f7e; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: bold; border: none; cursor: pointer; }
-        .clear-all-btn { flex: 1; background: #fff5f5; color: #e53e3e; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: bold; border: none; cursor: pointer; }
-        .save-btn { flex: 1; background: #2d3748; color: #fff; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: bold; border: none; cursor: pointer; }
+        .add-btn { flex: 1; background: var(--accent-btn-bg); color: var(--accent-btn-text); padding: 9px; border-radius: 7px; font-size: 12px; font-weight: 700; border: none; cursor: pointer; }
+        .clear-all-btn { flex: 1; background: rgba(185, 28, 28, 0.12); color: #d64747; padding: 9px; border-radius: 7px; font-size: 12px; font-weight: 700; border: none; cursor: pointer; }
+        .save-btn { flex: 1; background: #810000; color: #fff; padding: 9px; border-radius: 7px; font-size: 12px; font-weight: 700; border: none; cursor: pointer; }
 
         .io-btns { display: flex; gap: 6px; margin-top: 8px; }
-        .io-btn { flex: 1; background: #f1f2f6; color: #57606f; padding: 8px; border-radius: 6px; font-size: 11px; font-weight: bold; border: 1px solid #dfe4ea; cursor: pointer; }
+        .io-btn { 
+            flex: 1; 
+            background: var(--io-btn-bg); 
+            color: var(--io-btn-text); 
+            padding: 8px; border-radius: 6px; font-size: 11px; font-weight: 600; 
+            border: 1px solid var(--io-btn-border); 
+            cursor: pointer; 
+        }
+        .io-btn:hover { filter: brightness(1.08); }
 
         /* 历史记录 */
         .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .history-header h3 { font-size: 15px; margin: 0; }
-        #clearBtn { background-color: #ff7675; color: white; padding: 4px 10px; border-radius: 6px; font-size: 11px; border: none; cursor: pointer;}
+        .history-header h3 { font-size: 14px; margin: 0; color: var(--title-color); font-weight: 700; }
+        #clearBtn { background-color: #7b1c1c; color: white; padding: 4px 10px; border-radius: 5px; font-size: 11px; border: none; cursor: pointer; font-weight: 600; }
 
-        .history-scroll { width: 100%; border-radius: 10px; border: 1px solid #2d3436; overflow: hidden; }
-        .history-table { width: 100%; border-collapse: collapse; background: white; }
-        .history-table th { background-color: #2d3436; color: #ffffff; padding: 10px; font-size: 13px; }
-        .history-table td { padding: 10px; font-size: 13px; border-bottom: 1px solid #e2e8f0; text-align: center; }
+        .history-scroll { width: 100%; border-radius: 8px; border: 1px solid var(--card-border); overflow: hidden; }
+        .history-table { width: 100%; border-collapse: collapse; background: var(--card-bg); }
+        .history-table th { background-color: var(--table-th-bg); color: var(--table-th-text); padding: 9px; font-size: 12px; font-weight: 600; }
+        .history-table td { padding: 9px; font-size: 13px; border-bottom: 1px solid var(--table-border); text-align: center; }
         
-        .settings-footer { margin-top: 10px; padding-top: 8px; border-top: 1px dashed #ddd; font-size: 11px; color: #a0aec0; text-align: center; }
+        .settings-footer { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--card-border); font-size: 11px; color: var(--footer-text); text-align: center; }
 
-        /* toast 样式 */
+        /* Toast 提示 */
         .toast-message {
             position: fixed;
             bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
-            background: #1e272e;
-            color: #ffffff;
-            padding: 12px 24px;
-            border-radius: 40px;
-            font-size: 14px;
+            background: #17181f;
+            color: #e5e9f0;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 13px;
             font-weight: 500;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+            border: 1px solid #3c1e24;
             z-index: 10000;
             transition: opacity 0.2s;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.4px;
             pointer-events: none;
             white-space: nowrap;
         }
 
         .io-btns + .io-btns { margin-top: 6px; }
 
-        /* 红字提醒 */
+        /* 提醒文字 */
         .reminder-text {
-            color: red;
+            color: #b91c1c;
             text-align: center;
-            margin: 12px 0 4px;
-            font-weight: bold;
-            font-size: 14px;
+            margin: 10px 0 4px;
+            font-weight: 700;
+            font-size: 13px;
             letter-spacing: 1px;
+        }
+        body.dark-mode .reminder-text {
+            color: #df4a4a;
         }
     </style>
 </head>
@@ -196,7 +294,10 @@
 
     <div class="title-wrapper">
         <h2>在冰箱里随便拿出一个…</h2>
-        <div class="settings-btn" onclick="toggleConfig()">⚙️</div>
+        <div class="header-actions">
+            <div class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="切换夜间模式">🌙</div>
+            <div class="icon-btn" onclick="toggleConfig()" title="打开设置">⚙️</div>
+        </div>
     </div>
 
     <div class="btn-group">
@@ -208,7 +309,6 @@
     </div>
 
     <div class="card-container" id="config-container">
-        <!-- 基础设置项 -->
         <div class="setting-block">
             <div class="setting-row">
                 <span class="setting-title">防重复次数</span>
@@ -232,7 +332,6 @@
             </div>
         </div>
         
-        <!-- 词条表格区域 -->
         <div class="setting-block" style="margin-top: 10px;">
             <span class="setting-title">词条列表</span>
             <div style="overflow-x:auto;" class="config-table-scroll">
@@ -257,13 +356,12 @@
         </div>
         <div class="reminder-text">记得保存 记得保存 记得保存</div>
 
-        <!-- 批量覆盖导入模块 -->
         <div class="setting-block" style="margin-top:12px; margin-bottom:0;">
-            <textarea id="bulkText" rows="4" style="width:100%; border:1px solid #ddd; border-radius:6px; padding:8px; font-size:12px; line-height:1.5; resize:vertical;" placeholder="在此粘贴多行文本（每行一个选项）。&#10;导入时会自动去除开头的序号（如 '1. '）"></textarea>
-            <button class="io-btn" onclick="bulkImportText()" style="width:100%; margin-top:6px; background:#e6fffa; color:#049f7e; border:none; padding:8px; font-weight:bold; font-size:13px;">📋 文本覆盖导入</button>
+            <textarea id="bulkText" rows="4" style="width:100%; background:var(--input-bg); color:var(--text-main); border:1px solid var(--input-border); border-radius:6px; padding:8px; font-size:12px; line-height:1.5; resize:vertical;" placeholder="在此粘贴多行文本（每行一个选项）。&#10;导入时会自动去除开头的序号（如 '1. '）"></textarea>
+            <button class="io-btn" onclick="bulkImportText()" style="width:100%; margin-top:6px; background:var(--accent-btn-bg); color:var(--accent-btn-text); border:none; padding:8px; font-weight:bold; font-size:12px;">📋 文本覆盖导入</button>
         </div>
 
-        <div style="margin-top:10px; border-top:1px solid #edf2f7; padding-top:10px;">
+        <div style="margin-top:10px; border-top:1px solid var(--card-border); padding-top:10px;">
             <div class="io-btns">
                 <button class="io-btn" onclick="exportConfig()">复制配置</button>
                 <button class="io-btn" onclick="importConfig()">粘贴导入</button>
@@ -279,7 +377,7 @@
 
     <!-- 镜像页面按钮 -->
     <div style="width: 100%; max-width: 500px; text-align: right; margin-bottom: 8px;">
-        <button onclick="toggleMirror()" style="background: #718096; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;">🦭 镜像页面</button>
+        <button onclick="toggleMirror()" class="io-btn" style="padding: 5px 12px; font-size: 11px; flex: initial;">🦭 镜像页面</button>
     </div>
 
     <div class="card-container">
@@ -298,20 +396,33 @@
     </div>
 
     <script>
-        const colorPalette = [
-            { text: '#d63031', bg: '#fff5f5', border: '#ff7675' },
-            { text: '#0984e3', bg: '#f0f8ff', border: '#74b9ff' },
-            { text: '#00b894', bg: '#e6fff9', border: '#55efc4' },
-            { text: '#6c5ce7', bg: '#f3f0ff', border: '#a29bfe' },
-            { text: '#e17055', bg: '#fff3ec', border: '#fab1a0' },
-            { text: '#00cec9', bg: '#e0ffff', border: '#81ecec' },
-            { text: '#e84393', bg: '#ffeff6', border: '#fd79a8' },
-            { text: '#d35400', bg: '#fff2e6', border: '#e67e22' }
+        // 沉稳调色板（日间低饱和质感 + 夜间暗色微光质感）
+        const lightPalette = [
+            { text: '#7d1d24', bg: '#fbf0f0', border: '#e3b8b8' }, // 绛红
+            { text: '#234b6e', bg: '#eef4f9', border: '#b9d0e6' }, // 靛蓝
+            { text: '#215c4c', bg: '#eef7f4', border: '#b5ded4' }, // 松绿
+            { text: '#543b74', bg: '#f5f0fb', border: '#d4c2ec' }, // 墨紫
+            { text: '#7c4826', bg: '#faf2ec', border: '#e8c9b2' }, // 褐茶
+            { text: '#1b5f6b', bg: '#eef8fa', border: '#b3dee4' }, // 青黛
+            { text: '#7b324c', bg: '#faf0f4', border: '#e6bdcb' }, // 暮霞
+            { text: '#435260', bg: '#f1f4f6', border: '#c7d0d8' }  // 苍灰
+        ];
+
+        const darkPalette = [
+            { text: '#e58087', bg: '#251214', border: '#5c1e23' }, // 绯红
+            { text: '#81b2db', bg: '#101a24', border: '#23415c' }, // 寒蓝
+            { text: '#75caa9', bg: '#10221c', border: '#1f4e3f' }, // 苔青
+            { text: '#c29fe6', bg: '#1a1324', border: '#442b5c' }, // 幽紫
+            { text: '#e0a57e', bg: '#241712', border: '#5a3420' }, // 琥珀
+            { text: '#68c6d4', bg: '#0e1f24', border: '#1f4852' }, // 冰湖
+            { text: '#e28da8', bg: '#231219', border: '#572234' }, // 凝脂
+            { text: '#b3c1cd', bg: '#191d22', border: '#3b4754' }  // 玄石
         ];
 
         let antiRepeatLimit = 10;
         let enableTTS = true;
         let useWeight = true;
+        let isDarkMode = false;
 
         let modifiers = [
             { text: '问题1', weight: 1 },
@@ -321,16 +432,27 @@
 
         let recentHistory = [];
 
+        function getCurrentPalette() {
+            return isDarkMode ? darkPalette : lightPalette;
+        }
+
         window.onload = () => {
             const savedModifiers = localStorage.getItem('challenge_modifiers_v7');
             const savedUseWeight = localStorage.getItem('challenge_use_weight_v7');
             const savedAntiRepeat = localStorage.getItem('challenge_anti_repeat_v7');
             const savedTTS = localStorage.getItem('challenge_tts_v7');
+            const savedDark = localStorage.getItem('challenge_dark_mode_v7');
 
             if (savedModifiers) modifiers = JSON.parse(savedModifiers);
             if (savedUseWeight !== null) useWeight = (savedUseWeight === 'true');
             if (savedAntiRepeat !== null) antiRepeatLimit = parseInt(savedAntiRepeat, 10);
             if (savedTTS !== null) enableTTS = (savedTTS === 'true');
+            if (savedDark !== null) isDarkMode = (savedDark === 'true');
+
+            if (isDarkMode) {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeBtn').innerText = '☀️';
+            }
 
             document.getElementById('useWeightToggle').checked = useWeight;
             document.getElementById('ttsToggle').checked = enableTTS;
@@ -340,7 +462,20 @@
             document.getElementById('rollBtn').innerText = 'Gacha!!';
         };
 
-        function showToast(msg, duration = 5000) {
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            if (isDarkMode) {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeBtn').innerText = '☀️';
+            } else {
+                document.body.classList.remove('dark-mode');
+                document.getElementById('themeBtn').innerText = '🌙';
+            }
+            localStorage.setItem('challenge_dark_mode_v7', isDarkMode);
+            renderTable(); // 刷新表格里的颜色指示点
+        }
+
+        function showToast(msg, duration = 3000) {
             const existing = document.querySelector('.toast-message');
             if (existing) existing.remove();
             const toast = document.createElement('div');
@@ -359,9 +494,7 @@
             if (willShow) {
                 setTimeout(() => {
                     const scrollDiv = document.querySelector('.config-table-scroll');
-                    if (scrollDiv) {
-                        scrollDiv.scrollTop = scrollDiv.scrollHeight;
-                    }
+                    if (scrollDiv) scrollDiv.scrollTop = scrollDiv.scrollHeight;
                 }, 10);
             }
         }
@@ -374,14 +507,15 @@
         function renderTable() {
             const tbody = document.getElementById('modifierTableBody');
             tbody.innerHTML = '';
+            const palette = getCurrentPalette();
             
             document.getElementById('weightTh').style.display = useWeight ? 'table-cell' : 'none';
 
             modifiers.forEach((mod, index) => {
-                const colors = colorPalette[index % colorPalette.length];
+                const colors = palette[index % palette.length];
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td style="text-align:center; font-weight:500;">${index+1}</td>
+                    <td style="text-align:center; font-weight:600; color:var(--text-muted);">${index+1}</td>
                     <td><div style="display:flex;align-items:center;"><span class="color-dot" style="background-color:${colors.text}"></span>
                     <input type="text" value="${mod.text.replace(/"/g, '&quot;')}" class="mod-text"></div></td>
                     <td style="${useWeight ? '' : 'display:none;'}"><select class="mod-weight">
@@ -389,7 +523,7 @@
                         <option value="2" ${mod.weight==2?'selected':''}>2</option>
                         <option value="3" ${mod.weight==3?'selected':''}>3</option>
                     </select></td>
-                    <td style="text-align:center;"><span style="color:#e53e3e;font-size:18px;cursor:pointer;" onclick="removeRow(${index})">×</span></td>
+                    <td style="text-align:center;"><span style="color:#d64747;font-size:18px;cursor:pointer;" onclick="removeRow(${index})">×</span></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -415,9 +549,7 @@
 
             setTimeout(() => {
                 const scrollDiv = document.querySelector('.config-table-scroll');
-                if (scrollDiv) {
-                    scrollDiv.scrollTop = scrollDiv.scrollHeight;
-                }
+                if (scrollDiv) scrollDiv.scrollTop = scrollDiv.scrollHeight;
             }, 10);
         }
 
@@ -485,7 +617,7 @@
             localStorage.setItem('challenge_use_weight_v7', useWeight);
             renderTable();                     
 
-            showToast('✓ 保存完毕', 3000);
+            showToast('✓ 保存完毕', 2500);
             if(closePanel) {
                 document.getElementById('config-container').style.display = 'none';
             }
@@ -506,7 +638,7 @@
             el.select();
             document.execCommand("copy");
             document.body.removeChild(el);
-            showToast("📋 已复制紧凑配置");
+            showToast("📋 已复制配置");
         }
 
         function importConfig() {
@@ -523,7 +655,7 @@
                 } else if (Array.isArray(raw.modifiers)) {
                     modifiers = raw.modifiers;
                 } else {
-                    throw new Error('无法识别的配置格式');
+                    throw new Error('格式无法解析');
                 }
 
                 document.getElementById('useWeightToggle').checked = useWeight;
@@ -534,7 +666,6 @@
                 saveConfig(); 
             } catch (e) {
                 alert("无效配置或解析失败");
-                console.error(e);
             }
         }
 
@@ -550,12 +681,12 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `随机抽取配置_${new Date().toISOString().slice(0,10)}.json`;
+            a.download = `抽取配置_${new Date().toISOString().slice(0,10)}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            showToast('📥 配置文件已下载', 3000);
+            showToast('📥 配置文件已下载', 2500);
         }
 
         function importFromFile() {
@@ -576,7 +707,6 @@
                 reader.onload = function(ev) {
                     try {
                         const raw = JSON.parse(ev.target.result);
-                        
                         if (Array.isArray(raw.m)) {
                             modifiers = raw.m.map(item => ({ text: item[0], weight: item[1] }));
                             if(raw.w !== undefined) useWeight = raw.w;
@@ -584,8 +714,6 @@
                             if(raw.tts !== undefined) enableTTS = raw.tts;
                         } else if (Array.isArray(raw.modifiers)) {
                             modifiers = raw.modifiers;
-                        } else {
-                            throw new Error('文件格式不正确');
                         }
 
                         document.getElementById('useWeightToggle').checked = useWeight;
@@ -594,9 +722,9 @@
 
                         renderTable();
                         saveConfig();  
-                        showToast('📂 配置已导入并保存', 5000);
+                        showToast('📂 配置已导入并保存', 3000);
                     } catch (err) {
-                        alert('解析文件失败：' + err.message);
+                        alert('解析文件失败');
                     } finally {
                         document.body.removeChild(fileInput);
                     }
@@ -606,7 +734,7 @@
             fileInput.click();
         }
 
-        // 语音朗读功能
+        // 语音朗读
         function speakText(text) {
             if (!enableTTS) return;
             if ('speechSynthesis' in window) {
@@ -620,16 +748,14 @@
         // 抽取主逻辑
         function generateResults() {
             if (modifiers.length === 0) {
-                showToast("⚠️ 当前词条列表为空，请先在设置中添加词条");
+                showToast("⚠️ 词条列表为空，请先在设置中添加");
                 return;
             }
 
             let candidates = modifiers;
             if (antiRepeatLimit > 0) {
                 candidates = modifiers.filter(mod => !recentHistory.includes(mod.text));
-                if (candidates.length === 0) {
-                    candidates = modifiers;
-                }
+                if (candidates.length === 0) candidates = modifiers;
             }
             
             let totalWeight = candidates.reduce((sum, m) => sum + (useWeight ? m.weight : 1), 0);
@@ -648,13 +774,15 @@
             let modIndex = modifiers.findIndex(m => m.text === tMod.text);
             if (modIndex === -1) modIndex = 0;
 
+            const palette = getCurrentPalette();
             const mEl = document.getElementById('res-modifier');
-            const colors = colorPalette[modIndex % colorPalette.length];
+            const colors = palette[modIndex % palette.length];
+            
             mEl.innerText = tMod.text;
             mEl.className = 'modifier-result';
             mEl.style.color = colors.text;
             mEl.style.backgroundColor = colors.bg;
-            mEl.style.border = `2px dashed ${colors.border}`;
+            mEl.style.border = `2px solid ${colors.border}`;
 
             addHistory(tMod, modIndex);
             speakText(tMod.text);
@@ -664,8 +792,13 @@
             const tbody = document.getElementById('history-body');
             const tr = document.createElement('tr');
             const time = new Date().toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false });
-            let mHtml = `<span style="color:${colorPalette[modIndex % colorPalette.length].text}; font-weight:bold;">${m.text}</span>`;
-            tr.innerHTML = `<td>${time}</td><td>${mHtml}</td>`;
+            const palette = getCurrentPalette();
+            const color = palette[modIndex % palette.length].text;
+
+            tr.innerHTML = `
+                <td style="color:var(--text-muted);">${time}</td>
+                <td><span style="color:${color}; font-weight:700;">${m.text}</span></td>
+            `;
             tbody.insertBefore(tr, tbody.firstChild);
 
             if (antiRepeatLimit > 0) {
@@ -677,7 +810,7 @@
         }
 
         function clearHistory() { 
-            if(confirm("清空记录？")) {
+            if(confirm("确定清空抽取记录？")) {
                 document.getElementById('history-body').innerHTML = '';
                 recentHistory = [];
             }
