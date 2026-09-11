@@ -126,7 +126,7 @@
         .history-table th { background-color: #2d3436; color: #ffffff; padding: 10px; font-size: 13px; }
         .history-table td { padding: 10px; font-size: 13px; border-bottom: 1px solid #e2e8f0; text-align: center; }
         
-        .settings-footer { margin-top: 10px; padding-top: 8px; border-top: 1px dashed #ddd; font-size: 11px; color: #E2E8F0; text-align: center; }
+        .settings-footer { margin-top: 10px; padding-top: 8px; border-top: 1px dashed #ddd; font-size: 11px; color: #a0aec0; text-align: center; }
 
         /* toast 样式 */
         .toast-message {
@@ -183,14 +183,20 @@
         </div>
         
         <div class="setting-block" style="border-bottom:none; padding-bottom:0">
-            <span class="setting-title">词条权重设置</span>
+            <!-- 带有权重开关的标题栏 -->
+            <span class="setting-title" style="display:flex; justify-content:space-between;">
+                <span>词条设置</span>
+                <label style="font-weight:normal; cursor:pointer;">
+                    <input type="checkbox" id="useWeightToggle" onchange="toggleWeightUI()"> 启用权重
+                </label>
+            </span>
             <div style="overflow-x:auto;" class="config-table-scroll">
                 <table class="config-table">
                     <thead>
                         <tr>
                             <th width="10%">#</th>
                             <th>词条描述</th>
-                            <th width="22%">权重</th>
+                            <th width="22%" id="weightTh">权重</th>
                             <th width="12%">删</th>
                         </tr>
                     </thead>
@@ -206,13 +212,21 @@
         </div>
         <div class="reminder-text">记得保存 记得保存 记得保存</div>
 
-        <div class="io-btns">
-            <button class="io-btn" onclick="exportConfig()">复制配置</button>
-            <button class="io-btn" onclick="importConfig()">粘贴导入</button>
+        <!-- 批量覆盖导入模块 -->
+        <div class="setting-block" style="margin-top:12px; padding-bottom:0; border-bottom:none;">
+            <textarea id="bulkText" rows="4" style="width:100%; border:1px solid #ddd; border-radius:4px; padding:6px; font-size:12px; resize:vertical;" placeholder="在此粘贴多行文本（每行一个选项）。导入时会自动去除开头的序号（如 '1. '）"></textarea>
+            <button class="io-btn" onclick="bulkImportText()" style="width:100%; margin-top:6px; background:#e6fffa; color:#049f7e; border:none; padding:8px; font-weight:bold; font-size:13px;">📋 文本覆盖导入</button>
         </div>
-        <div class="io-btns">
-            <button class="io-btn" onclick="exportToFile()">📁 导出成文件</button>
-            <button class="io-btn" onclick="importFromFile()">📂 从文件导入</button>
+
+        <div style="margin-top:10px; border-top:1px solid #edf2f7; padding-top:10px;">
+            <div class="io-btns">
+                <button class="io-btn" onclick="exportConfig()">复制配置</button>
+                <button class="io-btn" onclick="importConfig()">粘贴导入</button>
+            </div>
+            <div class="io-btns">
+                <button class="io-btn" onclick="exportToFile()">📁 导出成文件</button>
+                <button class="io-btn" onclick="importFromFile()">📂 从文件导入</button>
+            </div>
         </div>
 
         <div class="settings-footer">Created by R @1203605850</div>
@@ -251,28 +265,31 @@
         ];
 
         let triggerProb = 100;
-        // 初始词条 (3条，权重均为1)
         let modifiers = [
             { text: '问题1', weight: 1 },
             { text: '问题2', weight: 1 },
             { text: '问题3', weight: 1 }
         ];
 
-        // 记录最近10次有结果的词条（用于避免重复）
         let recentHistory = [];
+        let useWeight = true; // 权重开关状态
 
         window.onload = () => {
             const savedTriggerProb = localStorage.getItem('challenge_trigger_prob_v7');
             const savedModifiers = localStorage.getItem('challenge_modifiers_v7');
+            const savedUseWeight = localStorage.getItem('challenge_use_weight_v7');
+
             if (savedTriggerProb !== null) triggerProb = parseFloat(savedTriggerProb);
             if (savedModifiers) modifiers = JSON.parse(savedModifiers);
+            if (savedUseWeight !== null) useWeight = (savedUseWeight === 'true');
+
+            document.getElementById('useWeightToggle').checked = useWeight;
             updateConfigUI();
             renderTable();
 
             document.getElementById('rollBtn').innerText = '随一下';
         };
 
-        // 轻提示
         function showToast(msg, duration = 5000) {
             const existing = document.querySelector('.toast-message');
             if (existing) existing.remove();
@@ -301,9 +318,19 @@
             }
         }
 
+        // 切换权重显隐
+        function toggleWeightUI() {
+            useWeight = document.getElementById('useWeightToggle').checked;
+            renderTable();
+        }
+
         function renderTable() {
             const tbody = document.getElementById('modifierTableBody');
             tbody.innerHTML = '';
+            
+            // 根据开关控制表头显示
+            document.getElementById('weightTh').style.display = useWeight ? 'table-cell' : 'none';
+
             modifiers.forEach((mod, index) => {
                 const colors = colorPalette[index % colorPalette.length];
                 const tr = document.createElement('tr');
@@ -311,7 +338,7 @@
                     <td style="text-align:center; font-weight:500;">${index+1}</td>
                     <td><div style="display:flex;align-items:center;"><span class="color-dot" style="background-color:${colors.text}"></span>
                     <input type="text" value="${mod.text.replace(/"/g, '&quot;')}" class="mod-text"></div></td>
-                    <td><select class="mod-weight">
+                    <td style="${useWeight ? '' : 'display:none;'}"><select class="mod-weight">
                         <option value="1" ${mod.weight==1?'selected':''}>1</option>
                         <option value="2" ${mod.weight==2?'selected':''}>2</option>
                         <option value="3" ${mod.weight==3?'selected':''}>3</option>
@@ -354,7 +381,6 @@
             renderTable();
         }
 
-        // 清空所有配置
         function clearAllConfig() {
             if(confirm("确定要清空所有填写的词条吗？")) {
                 modifiers = [];
@@ -362,8 +388,43 @@
             }
         }
 
-        function saveConfig() {
+        // 新增：文本框批量导入逻辑
+        function bulkImportText() {
+            const txt = document.getElementById('bulkText').value;
+            if (!txt.trim()) {
+                showToast("⚠️ 请先在文本框内粘贴内容");
+                return;
+            }
+            if (!confirm("确定要用文本框里的内容覆盖当前的全部词条吗？")) return;
+
+            const lines = txt.split('\n');
+            modifiers = [];
+
+            lines.forEach(line => {
+                // 正则：去除行首的空格、数字、点号，然后去首尾空白符
+                // 例如 "1. 挨顿毒打" 会变成 "挨顿毒打"
+                let cleanedLine = line.replace(/^\s*\d+\.\s*/, '').trim();
+                
+                if (cleanedLine) {
+                    modifiers.push({ text: cleanedLine, weight: 1 });
+                }
+            });
+
+            document.getElementById('bulkText').value = ''; // 清空文本框
+            renderTable();
+            saveConfig(false); // 自动保存但不关闭面板
+            showToast(`✅ 成功导入 ${modifiers.length} 个词条！`);
+            
+            // 自动滚到顶部方便查看
+            const scrollDiv = document.querySelector('.config-table-scroll');
+            if (scrollDiv) scrollDiv.scrollTop = 0;
+        }
+
+        // 修改保存逻辑以记录权重开关状态
+        function saveConfig(closePanel = true) {
             triggerProb = parseFloat(document.getElementById('triggerProbInput').value) || 0;
+            useWeight = document.getElementById('useWeightToggle').checked;
+            
             const texts = document.querySelectorAll('.mod-text');
             const weights = document.querySelectorAll('.mod-weight');
             const newMod = [];
@@ -374,15 +435,19 @@
             modifiers = newMod;
             localStorage.setItem('challenge_trigger_prob_v7', triggerProb);
             localStorage.setItem('challenge_modifiers_v7', JSON.stringify(modifiers));
+            localStorage.setItem('challenge_use_weight_v7', useWeight);
             renderTable();                     
 
-            showToast('✓ 保存完毕', 5000);
-            document.getElementById('config-container').style.display = 'none';
+            showToast('✓ 保存完毕', 3000);
+            if(closePanel) {
+                document.getElementById('config-container').style.display = 'none';
+            }
         }
 
         function exportConfig() {
             const compactData = { 
                 p: triggerProb, 
+                w: useWeight,
                 m: modifiers.map(({ text, weight }) => [text, weight]) 
             };
             const jsonStr = JSON.stringify(compactData);
@@ -393,7 +458,7 @@
             el.select();
             document.execCommand("copy");
             document.body.removeChild(el);
-            alert("已复制紧凑配置");
+            showToast("📋 已复制紧凑配置");
         }
 
         function importConfig() {
@@ -401,21 +466,20 @@
             if (!str) return;
             try {
                 const raw = JSON.parse(decodeURIComponent(escape(atob(str))));
-                let newTriggerProb, newModifiers;
-
-                if (raw.triggerProb !== undefined && Array.isArray(raw.modifiers)) {
-                    newTriggerProb = raw.triggerProb;
-                    newModifiers = raw.modifiers;
-                } else if (raw.p !== undefined && Array.isArray(raw.m)) {
-                    newTriggerProb = raw.p;
-                    newModifiers = raw.m.map(item => ({ text: item[0], weight: item[1] }));
+                
+                // 兼容带权重的旧版本配置或新版本
+                if (raw.p !== undefined && Array.isArray(raw.m)) {
+                    triggerProb = raw.p;
+                    modifiers = raw.m.map(item => ({ text: item[0], weight: item[1] }));
+                    if(raw.w !== undefined) useWeight = raw.w;
+                } else if (raw.triggerProb !== undefined && Array.isArray(raw.modifiers)) {
+                    triggerProb = raw.triggerProb;
+                    modifiers = raw.modifiers;
                 } else {
                     throw new Error('无法识别的配置格式');
                 }
 
-                triggerProb = newTriggerProb;
-                modifiers = newModifiers;
-
+                document.getElementById('useWeightToggle').checked = useWeight;
                 updateConfigUI();
                 renderTable();
                 saveConfig(); 
@@ -428,6 +492,7 @@
         function exportToFile() {
             const compactData = { 
                 p: triggerProb, 
+                w: useWeight,
                 m: modifiers.map(({ text, weight }) => [text, weight]) 
             };
             const jsonStr = JSON.stringify(compactData, null, 2); 
@@ -461,21 +526,19 @@
                 reader.onload = function(ev) {
                     try {
                         const raw = JSON.parse(ev.target.result);
-                        let newTriggerProb, newModifiers;
-
-                        if (raw.triggerProb !== undefined && Array.isArray(raw.modifiers)) {
-                            newTriggerProb = raw.triggerProb;
-                            newModifiers = raw.modifiers;
-                        } else if (raw.p !== undefined && Array.isArray(raw.m)) {
-                            newTriggerProb = raw.p;
-                            newModifiers = raw.m.map(item => ({ text: item[0], weight: item[1] }));
+                        
+                        if (raw.p !== undefined && Array.isArray(raw.m)) {
+                            triggerProb = raw.p;
+                            modifiers = raw.m.map(item => ({ text: item[0], weight: item[1] }));
+                            if(raw.w !== undefined) useWeight = raw.w;
+                        } else if (raw.triggerProb !== undefined && Array.isArray(raw.modifiers)) {
+                            triggerProb = raw.triggerProb;
+                            modifiers = raw.modifiers;
                         } else {
                             throw new Error('文件格式不正确');
                         }
 
-                        triggerProb = newTriggerProb;
-                        modifiers = newModifiers;
-
+                        document.getElementById('useWeightToggle').checked = useWeight;
                         updateConfigUI();
                         renderTable();
                         saveConfig();  
@@ -488,48 +551,48 @@
                 };
                 reader.readAsText(file);
             });
-
             fileInput.click();
         }
 
         // 语音朗读功能
         function speakText(text) {
             if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel(); // 停止上一段未读完的语音
+                window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'zh-CN';
                 window.speechSynthesis.speak(utterance);
             }
         }
 
-        // 抽取主逻辑
+        // 抽取主逻辑（引入权重开关判定）
         function generateResults() {
             const rollBtn = document.getElementById('rollBtn');
             let tMod = null, modIndex = -1;
 
             if (Math.random() * 100 <= triggerProb && modifiers.length > 0) {
-                // 构建候选列表：排除最近10次出现过的词条
                 let candidates = modifiers.filter(mod => !recentHistory.includes(mod.text));
                 if (candidates.length === 0) {
-                    candidates = modifiers; // 全部被排除，则允许重复
+                    candidates = modifiers;
                 }
-                // 按权重随机抽取
-                let totalWeight = candidates.reduce((sum, m) => sum + m.weight, 0);
+                
+                // 如果权重关闭，所有选项视为权重为 1
+                let totalWeight = candidates.reduce((sum, m) => sum + (useWeight ? m.weight : 1), 0);
                 let r = Math.random() * totalWeight;
+                
                 for (let i = 0; i < candidates.length; i++) {
-                    if (r < candidates[i].weight) {
+                    let currentWeight = useWeight ? candidates[i].weight : 1;
+                    if (r < currentWeight) {
                         tMod = candidates[i];
                         modIndex = modifiers.findIndex(m => m.text === tMod.text);
                         break;
                     }
-                    r -= candidates[i].weight;
+                    r -= currentWeight;
                 }
             }
 
             const mEl = document.getElementById('res-modifier');
 
             if (tMod === null) {
-                // 未触发
                 mEl.innerText = '【无】';
                 mEl.style = '';
                 mEl.className = 'modifier-result mod-none';
@@ -538,7 +601,6 @@
                 return;
             }
 
-            // ---------- 有词条抽取结果 ----------
             const colors = colorPalette[modIndex % colorPalette.length];
             mEl.innerText = tMod.text;
             mEl.className = 'modifier-result';
@@ -547,8 +609,6 @@
             mEl.style.border = `2px dashed ${colors.border}`;
 
             addHistory(tMod, modIndex);
-            
-            // 触发语音朗读
             speakText(tMod.text);
         }
 
@@ -573,7 +633,6 @@
             }
         }
         
-        // 镜像页面翻转功能
         function toggleMirror() {
             const currentTransform = document.body.style.transform;
             document.body.style.transform = currentTransform === 'scaleX(-1)' ? 'none' : 'scaleX(-1)';
