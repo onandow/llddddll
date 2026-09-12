@@ -35,7 +35,7 @@
         }
 
         body.dark-mode {
-            /* 深夜极客黑灰模式（彻底摒弃暗红背景，大幅提高清晰度） */
+            /* 深夜极客黑灰模式 */
             --bg-gradient: #121316;
             --card-bg: #1a1c22;
             --card-border: #2c303a;
@@ -83,19 +83,25 @@
             position: relative;
             width: 100%;
             max-width: 500px;
-            margin: 15px 0 25px 0;
-            padding: 0 85px 0 45px;
+            margin: 15px 0 20px 0;
+            padding: 0 45px 0 45px;
         }
         .title-wrapper h2 {
             color: var(--title-color);
             margin: 0;
-            font-size: 1.45rem;
+            font-size: 1.35rem;
             font-weight: 800;
-            letter-spacing: 1.2px;
-            line-height: 1.4;
+            letter-spacing: 1px;
+            line-height: 1.35;
             text-align: center;
         }
         
+        .header-left {
+            position: absolute;
+            left: 5px;
+            display: flex;
+        }
+
         .header-actions {
             position: absolute;
             right: 5px;
@@ -104,7 +110,7 @@
         }
 
         .icon-btn {
-            font-size: 16px;
+            font-size: 18px;
             cursor: pointer;
             background: var(--icon-btn-bg);
             border-radius: 9px;
@@ -116,9 +122,63 @@
             box-shadow: 0 2px 8px var(--card-shadow);
             border: 1px solid var(--icon-btn-border);
             color: var(--text-main);
+            user-select: none;
         }
         .icon-btn:hover {
             filter: brightness(1.15);
+        }
+
+        /* 转盘区域 */
+        #wheel-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 16px;
+        }
+        .wheel-box {
+            position: relative;
+            width: 340px;
+            height: 340px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #wheelCanvas {
+            width: 340px;
+            height: 340px;
+            border-radius: 50%;
+            box-shadow: 0 8px 24px var(--card-shadow);
+        }
+        /* 顶部指针 */
+        .wheel-pointer {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 28px solid #c9382b;
+            filter: drop-shadow(0 3px 4px rgba(0,0,0,0.35));
+            z-index: 10;
+        }
+        .wheel-center-dot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            border: 4px solid #810000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            z-index: 5;
         }
 
         /* 主抽取按钮 */
@@ -129,7 +189,7 @@
             border: none; border-radius: 12px;
             box-shadow: 0 4px 15px var(--roll-btn-shadow);
             cursor: pointer;
-            transition: transform 0.1s ease, filter 0.2s ease;
+            transition: transform 0.1s ease, filter 0.2s ease, background-color 0.2s ease;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -138,6 +198,10 @@
         #rollBtn:active { 
             transform: scale(0.985); 
             background: var(--roll-btn-active);
+        }
+        #rollBtn.btn-stop {
+            background: #d97706 !important;
+            box-shadow: 0 4px 15px rgba(217, 119, 6, 0.45) !important;
         }
 
         /* 容器卡片 */
@@ -224,7 +288,7 @@
             border-radius: 4px; padding: 6px; font-size: 13px; 
         }
         
-        .color-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; flex-shrink: 0; }
+        .color-dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 6px; flex-shrink: 0; }
 
         .action-btns { display: flex; gap: 8px; margin-top: 10px; }
         .add-btn { flex: 1; background: var(--accent-btn-bg); color: var(--accent-btn-text); padding: 9px; border-radius: 7px; font-size: 12px; font-weight: 700; border: none; cursor: pointer; }
@@ -294,6 +358,9 @@
 <body>
 
     <div class="title-wrapper">
+        <div class="header-left">
+            <div class="icon-btn" id="modeBtn" onclick="toggleWheelMode()" title="切换转盘/随机模式">🍌</div>
+        </div>
         <h2>在冰箱里随便拿出一个…</h2>
         <div class="header-actions">
             <div class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="切换夜间模式">🌙</div>
@@ -301,8 +368,17 @@
         </div>
     </div>
 
+    <!-- 转盘模式展示区域 -->
+    <div id="wheel-container">
+        <div class="wheel-box">
+            <div class="wheel-pointer"></div>
+            <canvas id="wheelCanvas" width="680" height="680"></canvas>
+            <div class="wheel-center-dot"></div>
+        </div>
+    </div>
+
     <div class="btn-group">
-        <button id="rollBtn" onclick="generateResults()">Gacha!!</button>
+        <button id="rollBtn" onclick="handleRollButtonClick()">Gacha!!</button>
     </div>
 
     <div class="card-container">
@@ -397,34 +473,25 @@
     </div>
 
     <script>
-        // 日间沉稳矿物色
-        const lightPalette = [
-            { text: '#7d1d24', bg: '#fbf0f0', border: '#e3b8b8' }, 
-            { text: '#234b6e', bg: '#eef4f9', border: '#b9d0e6' }, 
-            { text: '#215c4c', bg: '#eef7f4', border: '#b5ded4' }, 
-            { text: '#543b74', bg: '#f5f0fb', border: '#d4c2ec' }, 
-            { text: '#7c4826', bg: '#faf2ec', border: '#e8c9b2' }, 
-            { text: '#1b5f6b', bg: '#eef8fa', border: '#b3dee4' }, 
-            { text: '#7b324c', bg: '#faf0f4', border: '#e6bdcb' }, 
-            { text: '#435260', bg: '#f1f4f6', border: '#c7d0d8' }  
-        ];
-
-        // 深夜高辨识度清透调色板（纯黑灰色背景下的清晰字色与微光底色）
-        const darkPalette = [
-            { text: '#ff949b', bg: '#291819', border: '#692a2e' }, // 亮珊瑚
-            { text: '#96caff', bg: '#152130', border: '#254a73' }, // 冰川蓝
-            { text: '#8eedc7', bg: '#14261f', border: '#256149' }, // 浅薄荷
-            { text: '#d9b6ff', bg: '#221930', border: '#53347a' }, // 丁香紫
-            { text: '#ffbe8f', bg: '#2b1e15', border: '#694228' }, // 亮杏茶
-            { text: '#81e6f5', bg: '#12262b', border: '#225d6b' }, // 湖水青
-            { text: '#ffa6c5', bg: '#2b1720', border: '#6e2b47' }, // 樱粉
-            { text: '#d4deeb', bg: '#1f242c', border: '#455061' }  // 珍珠白灰
+        // 基于 Pantone 色卡提取的 10 色标准配色体系
+        const pantonePalette = [
+            { bg: '#B8E2F2', text: '#114B60', border: '#84BFD4' }, // 12-4401 TCX
+            { bg: '#F9C8BE', text: '#5D2418', border: '#DDA094' }, // 13-1513 TCX
+            { bg: '#BA2B65', text: '#FFFFFF', border: '#871644' }, // 18-2042 TCX
+            { bg: '#00599D', text: '#FFFFFF', border: '#003E6E' }, // 19-4151 TCX
+            { bg: '#F6B343', text: '#472B00', border: '#C78923' }, // 14-0850 TCX
+            { bg: '#7B9DB5', text: '#FFFFFF', border: '#57788F' }, // 16-4118 TCX
+            { bg: '#0F6C79', text: '#FFFFFF', border: '#074852' }, // 18-4728 TCX
+            { bg: '#82634F', text: '#FFFFFF', border: '#5C4333' }, // 18-1019 TCX
+            { bg: '#79347E', text: '#FFFFFF', border: '#531B57' }, // 18-3324 TCX
+            { bg: '#C9382B', text: '#FFFFFF', border: '#942217' }  // 18-1564 TCX
         ];
 
         let antiRepeatLimit = 10;
         let enableTTS = true;
         let useWeight = true;
         let isDarkMode = false;
+        let isWheelMode = false; // 是否开启转盘模式
 
         let modifiers = [
             { text: '问题1', weight: 1 },
@@ -433,9 +500,17 @@
         ];
 
         let recentHistory = [];
+        let historyLogs = []; // 持久化最近记录列表
+
+        // 转盘动效相关控制变量
+        let currentWheelAngle = 0;
+        let wheelState = 'idle'; // 'idle' | 'spinning' | 'stopping'
+        let spinSpeed = 0;
+        let animFrameId = null;
+        let pendingResult = null;
 
         function getCurrentPalette() {
-            return isDarkMode ? darkPalette : lightPalette;
+            return pantonePalette;
         }
 
         window.onload = () => {
@@ -444,12 +519,28 @@
             const savedAntiRepeat = localStorage.getItem('challenge_anti_repeat_v7');
             const savedTTS = localStorage.getItem('challenge_tts_v7');
             const savedDark = localStorage.getItem('challenge_dark_mode_v7');
+            const savedWheelMode = localStorage.getItem('challenge_wheel_mode_v7');
+            const savedHistory = localStorage.getItem('challenge_history_records_v7');
 
             if (savedModifiers) modifiers = JSON.parse(savedModifiers);
             if (savedUseWeight !== null) useWeight = (savedUseWeight === 'true');
             if (savedAntiRepeat !== null) antiRepeatLimit = parseInt(savedAntiRepeat, 10);
             if (savedTTS !== null) enableTTS = (savedTTS === 'true');
             if (savedDark !== null) isDarkMode = (savedDark === 'true');
+            if (savedWheelMode !== null) isWheelMode = (savedWheelMode === 'true');
+
+            // 恢复本地存储的历史记录
+            if (savedHistory) {
+                try {
+                    historyLogs = JSON.parse(savedHistory);
+                    renderHistoryTable();
+                    if (antiRepeatLimit > 0) {
+                        recentHistory = historyLogs.slice(0, antiRepeatLimit).map(item => item.text).reverse();
+                    }
+                } catch(e) {
+                    historyLogs = [];
+                }
+            }
 
             if (isDarkMode) {
                 document.body.classList.add('dark-mode');
@@ -460,9 +551,40 @@
             document.getElementById('ttsToggle').checked = enableTTS;
             document.getElementById('antiRepeatLimitInput').value = antiRepeatLimit;
 
+            updateModeUI();
             renderTable();
-            document.getElementById('rollBtn').innerText = 'Gacha!!';
+            drawWheel();
         };
+
+        // 切换转盘模式
+        function toggleWheelMode() {
+            if (wheelState !== 'idle') return;
+            isWheelMode = !isWheelMode;
+            localStorage.setItem('challenge_wheel_mode_v7', isWheelMode);
+            updateModeUI();
+            if (isWheelMode) {
+                drawWheel();
+            }
+        }
+
+        function updateModeUI() {
+            const modeBtn = document.getElementById('modeBtn');
+            const wheelContainer = document.getElementById('wheel-container');
+            const rollBtn = document.getElementById('rollBtn');
+
+            if (isWheelMode) {
+                modeBtn.innerText = '🦭';
+                modeBtn.title = '当前为转盘模式，点击切换为直接随机';
+                wheelContainer.style.display = 'flex';
+                rollBtn.innerText = 'Gacha!!';
+            } else {
+                modeBtn.innerText = '🍌';
+                modeBtn.title = '当前为直接随机，点击切换为转盘模式';
+                wheelContainer.style.display = 'none';
+                rollBtn.innerText = 'Gacha!!';
+                rollBtn.classList.remove('btn-stop');
+            }
+        }
 
         function toggleTheme() {
             isDarkMode = !isDarkMode;
@@ -475,6 +597,8 @@
             }
             localStorage.setItem('challenge_dark_mode_v7', isDarkMode);
             renderTable();
+            drawWheel();
+            renderHistoryTable();
         }
 
         function showToast(msg, duration = 3000) {
@@ -518,7 +642,7 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td style="text-align:center; font-weight:600; color:var(--text-muted);">${index+1}</td>
-                    <td><div style="display:flex;align-items:center;"><span class="color-dot" style="background-color:${colors.text}"></span>
+                    <td><div style="display:flex;align-items:center;"><span class="color-dot" style="background-color:${colors.bg}; border:1px solid ${colors.border};"></span>
                     <input type="text" value="${mod.text.replace(/"/g, '&quot;')}" class="mod-text"></div></td>
                     <td style="${useWeight ? '' : 'display:none;'}"><select class="mod-weight">
                         <option value="1" ${mod.weight==1?'selected':''}>1</option>
@@ -548,6 +672,7 @@
             syncTableToModifiers();                     
             modifiers.push({ text: '', weight: 1 });
             renderTable();
+            drawWheel();
 
             setTimeout(() => {
                 const scrollDiv = document.querySelector('.config-table-scroll');
@@ -559,12 +684,14 @@
             syncTableToModifiers();                     
             modifiers.splice(index, 1);                 
             renderTable();
+            drawWheel();
         }
 
         function clearAllConfig() {
             if(confirm("确定要清空所有填写的词条吗？")) {
                 modifiers = [];
                 renderTable();
+                drawWheel();
             }
         }
 
@@ -589,6 +716,7 @@
             document.getElementById('bulkText').value = '';
             renderTable();
             saveConfig(false);
+            drawWheel();
             showToast(`✅ 成功导入 ${modifiers.length} 个词条！`);
             
             const scrollDiv = document.querySelector('.config-table-scroll');
@@ -618,6 +746,7 @@
             localStorage.setItem('challenge_modifiers_v7', JSON.stringify(modifiers));
             localStorage.setItem('challenge_use_weight_v7', useWeight);
             renderTable();                     
+            drawWheel();
 
             showToast('✓ 保存完毕', 2500);
             if(closePanel) {
@@ -746,12 +875,73 @@
             }
         }
 
-        function generateResults() {
-            if (modifiers.length === 0) {
-                showToast("⚠️ 词条列表为空，请先在设置中添加");
+        // ===================== 转盘绘制与动效 =====================
+        function drawWheel() {
+            const canvas = document.getElementById('wheelCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const cx = width / 2;
+            const cy = height / 2;
+            const radius = width / 2 - 14;
+
+            ctx.clearRect(0, 0, width, height);
+
+            const count = modifiers.length;
+            if (count === 0) {
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+                ctx.fillStyle = isDarkMode ? '#1e2129' : '#e2e5ec';
+                ctx.fill();
                 return;
             }
 
+            const arc = (2 * Math.PI) / count;
+            const palette = getCurrentPalette();
+
+            for (let i = 0; i < count; i++) {
+                const angle = currentWheelAngle + i * arc;
+                const colors = palette[i % palette.length];
+
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.arc(cx, cy, radius, angle, angle + arc);
+                ctx.closePath();
+                ctx.fillStyle = colors.bg;
+                ctx.fill();
+
+                ctx.strokeStyle = colors.border;
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(angle + arc / 2);
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = colors.text;
+
+                let fontSize = 26;
+                if (count > 24) fontSize = 16;
+                else if (count > 16) fontSize = 20;
+                ctx.font = `bold ${fontSize}px sans-serif`;
+
+                let displayText = modifiers[i].text;
+                if (displayText.length > 10) displayText = displayText.substring(0, 9) + '…';
+                ctx.fillText(displayText, radius - 24, 0);
+
+                ctx.restore();
+            }
+
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+            ctx.strokeStyle = isDarkMode ? '#3a404f' : '#b0b8c9';
+            ctx.lineWidth = 7;
+            ctx.stroke();
+        }
+
+        function pickRandomResult() {
             let candidates = modifiers;
             if (antiRepeatLimit > 0) {
                 candidates = modifiers.filter(mod => !recentHistory.includes(mod.text));
@@ -774,6 +964,10 @@
             let modIndex = modifiers.findIndex(m => m.text === tMod.text);
             if (modIndex === -1) modIndex = 0;
 
+            return { tMod, modIndex };
+        }
+
+        function showAndLogResult(tMod, modIndex) {
             const palette = getCurrentPalette();
             const mEl = document.getElementById('res-modifier');
             const colors = palette[modIndex % palette.length];
@@ -788,18 +982,137 @@
             speakText(tMod.text);
         }
 
-        function addHistory(m, modIndex) {
-            const tbody = document.getElementById('history-body');
-            const tr = document.createElement('tr');
-            const time = new Date().toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false });
-            const palette = getCurrentPalette();
-            const color = palette[modIndex % palette.length].text;
+        function handleRollButtonClick() {
+            if (modifiers.length === 0) {
+                showToast("⚠️ 词条列表为空，请先在设置中添加");
+                return;
+            }
 
-            tr.innerHTML = `
-                <td style="color:var(--text-muted); font-weight:500;">${time}</td>
-                <td><span style="color:${color}; font-weight:700;">${m.text}</span></td>
-            `;
-            tbody.insertBefore(tr, tbody.firstChild);
+            if (!isWheelMode) {
+                const { tMod, modIndex } = pickRandomResult();
+                showAndLogResult(tMod, modIndex);
+            } else {
+                const rollBtn = document.getElementById('rollBtn');
+                if (wheelState === 'idle') {
+                    startWheelSpin();
+                } else if (wheelState === 'spinning') {
+                    stopWheelSpin();
+                }
+            }
+        }
+
+        function startWheelSpin() {
+            wheelState = 'spinning';
+            const rollBtn = document.getElementById('rollBtn');
+            rollBtn.innerText = 'Stop!!';
+            rollBtn.classList.add('btn-stop');
+
+            pendingResult = pickRandomResult();
+
+            spinSpeed = 0.3;
+            function spinLoop() {
+                if (wheelState === 'spinning') {
+                    currentWheelAngle = (currentWheelAngle + spinSpeed) % (2 * Math.PI);
+                    drawWheel();
+                    animFrameId = requestAnimationFrame(spinLoop);
+                }
+            }
+            spinLoop();
+        }
+
+        function stopWheelSpin() {
+            wheelState = 'stopping';
+            cancelAnimationFrame(animFrameId);
+            
+            const rollBtn = document.getElementById('rollBtn');
+            rollBtn.disabled = true;
+
+            const count = modifiers.length;
+            const arc = (2 * Math.PI) / count;
+            const targetIndex = pendingResult.modIndex;
+
+            const pointerAngle = 1.5 * Math.PI;
+            const targetSectorCenter = targetIndex * arc + arc / 2;
+            let finalTargetAngle = pointerAngle - targetSectorCenter;
+
+            const twoPi = 2 * Math.PI;
+            currentWheelAngle = ((currentWheelAngle % twoPi) + twoPi) % twoPi;
+            finalTargetAngle = ((finalTargetAngle % twoPi) + twoPi) % twoPi;
+
+            let extraSpins = 3 * twoPi;
+            let diff = finalTargetAngle - currentWheelAngle;
+            if (diff < 0) diff += twoPi;
+            let totalDistance = diff + extraSpins;
+
+            let startAngle = currentWheelAngle;
+            let startTime = null;
+            const duration = 2800;
+
+            function easeOutCubic(t) {
+                return 1 - Math.pow(1 - t, 3);
+            }
+
+            function stopLoop(timestamp) {
+                if (!startTime) startTime = timestamp;
+                let elapsed = timestamp - startTime;
+                let progress = Math.min(elapsed / duration, 1);
+                let currentProgress = easeOutCubic(progress);
+
+                currentWheelAngle = startAngle + totalDistance * currentProgress;
+                drawWheel();
+
+                if (progress < 1) {
+                    animFrameId = requestAnimationFrame(stopLoop);
+                } else {
+                    currentWheelAngle = startAngle + totalDistance;
+                    drawWheel();
+                    wheelState = 'idle';
+
+                    rollBtn.disabled = false;
+                    rollBtn.innerText = 'Gacha!!';
+                    rollBtn.classList.remove('btn-stop');
+
+                    showAndLogResult(pendingResult.tMod, pendingResult.modIndex);
+                }
+            }
+
+            animFrameId = requestAnimationFrame(stopLoop);
+        }
+
+        // 渲染最近记录表格
+        function renderHistoryTable() {
+            const tbody = document.getElementById('history-body');
+            tbody.innerHTML = '';
+            const palette = getCurrentPalette();
+
+            historyLogs.forEach(record => {
+                const tr = document.createElement('tr');
+                const colors = palette[record.modIndex % palette.length];
+                tr.innerHTML = `
+                    <td style="color:var(--text-muted); font-weight:500;">${record.time}</td>
+                    <td><span style="display:inline-block; padding:3px 10px; border-radius:6px; background-color:${colors.bg}; color:${colors.text}; border:1px solid ${colors.border}; font-weight:700;">${record.text}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 添加并本地保存记录
+        function addHistory(m, modIndex) {
+            const time = new Date().toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false });
+            
+            historyLogs.unshift({
+                time: time,
+                text: m.text,
+                modIndex: modIndex
+            });
+
+            // 最多保留200条历史记录防止占用过大存储
+            if (historyLogs.length > 200) {
+                historyLogs.pop();
+            }
+
+            localStorage.setItem('challenge_history_records_v7', JSON.stringify(historyLogs));
+            renderHistoryTable();
 
             if (antiRepeatLimit > 0) {
                 recentHistory.push(m.text);
@@ -809,10 +1122,14 @@
             }
         }
 
+        // 清空历史记录及本地缓存
         function clearHistory() { 
             if(confirm("确定清空抽取记录？")) {
+                historyLogs = [];
+                localStorage.removeItem('challenge_history_records_v7');
                 document.getElementById('history-body').innerHTML = '';
                 recentHistory = [];
+                showToast("🗑️ 抽取记录已全部清空");
             }
         }
         
