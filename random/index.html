@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍌</text></svg>">
     <style>
         :root {
-            /* 日间沉稳模式 */
+            /* 日间模式 */
             --bg-gradient: linear-gradient(135deg, #edeef2 0%, #e2e4e9 100%);
             --card-bg: #ffffff;
             --card-border: #e2e5ec;
@@ -35,7 +35,7 @@
         }
 
         body.dark-mode {
-            /* 深夜极客黑灰模式 */
+            /* 深夜模式 */
             --bg-gradient: #121316;
             --card-bg: #1a1c22;
             --card-border: #2c303a;
@@ -475,23 +475,23 @@
     <script>
         // 基于 Pantone 色卡提取的 10 色标准配色体系
         const pantonePalette = [
-            { bg: '#B8E2F2', text: '#114B60', border: '#84BFD4' }, // 12-4401 TCX
-            { bg: '#F9C8BE', text: '#5D2418', border: '#DDA094' }, // 13-1513 TCX
-            { bg: '#BA2B65', text: '#FFFFFF', border: '#871644' }, // 18-2042 TCX
-            { bg: '#00599D', text: '#FFFFFF', border: '#003E6E' }, // 19-4151 TCX
-            { bg: '#F6B343', text: '#472B00', border: '#C78923' }, // 14-0850 TCX
-            { bg: '#7B9DB5', text: '#FFFFFF', border: '#57788F' }, // 16-4118 TCX
-            { bg: '#0F6C79', text: '#FFFFFF', border: '#074852' }, // 18-4728 TCX
-            { bg: '#82634F', text: '#FFFFFF', border: '#5C4333' }, // 18-1019 TCX
-            { bg: '#79347E', text: '#FFFFFF', border: '#531B57' }, // 18-3324 TCX
-            { bg: '#C9382B', text: '#FFFFFF', border: '#942217' }  // 18-1564 TCX
+            { bg: '#B8E2F2', text: '#114B60', border: '#84BFD4' }, 
+            { bg: '#F9C8BE', text: '#5D2418', border: '#DDA094' }, 
+            { bg: '#BA2B65', text: '#FFFFFF', border: '#871644' }, 
+            { bg: '#00599D', text: '#FFFFFF', border: '#003E6E' }, 
+            { bg: '#F6B343', text: '#472B00', border: '#C78923' }, 
+            { bg: '#7B9DB5', text: '#FFFFFF', border: '#57788F' }, 
+            { bg: '#0F6C79', text: '#FFFFFF', border: '#074852' }, 
+            { bg: '#82634F', text: '#FFFFFF', border: '#5C4333' }, 
+            { bg: '#79347E', text: '#FFFFFF', border: '#531B57' }, 
+            { bg: '#C9382B', text: '#FFFFFF', border: '#942217' }  
         ];
 
         let antiRepeatLimit = 10;
         let enableTTS = true;
         let useWeight = true;
         let isDarkMode = false;
-        let isWheelMode = false; // 是否开启转盘模式
+        let isWheelMode = false;
 
         let modifiers = [
             { text: '问题1', weight: 1 },
@@ -500,11 +500,11 @@
         ];
 
         let recentHistory = [];
-        let historyLogs = []; // 持久化最近记录列表
+        let historyLogs = [];
 
         // 转盘动效相关控制变量
         let currentWheelAngle = 0;
-        let wheelState = 'idle'; // 'idle' | 'spinning' | 'stopping'
+        let wheelState = 'idle';
         let spinSpeed = 0;
         let animFrameId = null;
         let pendingResult = null;
@@ -529,7 +529,6 @@
             if (savedDark !== null) isDarkMode = (savedDark === 'true');
             if (savedWheelMode !== null) isWheelMode = (savedWheelMode === 'true');
 
-            // 恢复本地存储的历史记录
             if (savedHistory) {
                 try {
                     historyLogs = JSON.parse(savedHistory);
@@ -556,7 +555,6 @@
             drawWheel();
         };
 
-        // 切换转盘模式
         function toggleWheelMode() {
             if (wheelState !== 'idle') return;
             isWheelMode = !isWheelMode;
@@ -865,13 +863,16 @@
             fileInput.click();
         }
 
+        // 语音朗读功能：确保立即重置并播报
         function speakText(text) {
             if (!enableTTS) return;
             if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'zh-CN';
-                window.speechSynthesis.speak(utterance);
+                window.speechSynthesis.cancel(); // 立即取消正在播放或挂起的语音
+                setTimeout(() => {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'zh-CN';
+                    window.speechSynthesis.speak(utterance);
+                }, 50);
             }
         }
 
@@ -967,6 +968,7 @@
             return { tMod, modIndex };
         }
 
+        // 显示结果面板、记录历史与语音播报
         function showAndLogResult(tMod, modIndex) {
             const palette = getCurrentPalette();
             const mEl = document.getElementById('res-modifier');
@@ -979,7 +981,7 @@
             mEl.style.border = `2px solid ${colors.border}`;
 
             addHistory(tMod, modIndex);
-            speakText(tMod.text);
+            speakText(tMod.text); // 执行语音朗读
         }
 
         function handleRollButtonClick() {
@@ -1072,6 +1074,7 @@
                     rollBtn.innerText = 'Gacha!!';
                     rollBtn.classList.remove('btn-stop');
 
+                    // 转盘彻底停止后，展示结果并朗读
                     showAndLogResult(pendingResult.tMod, pendingResult.modIndex);
                 }
             }
@@ -1079,7 +1082,6 @@
             animFrameId = requestAnimationFrame(stopLoop);
         }
 
-        // 渲染最近记录表格
         function renderHistoryTable() {
             const tbody = document.getElementById('history-body');
             tbody.innerHTML = '';
@@ -1096,7 +1098,6 @@
             });
         }
 
-        // 添加并本地保存记录
         function addHistory(m, modIndex) {
             const time = new Date().toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false });
             
@@ -1106,7 +1107,6 @@
                 modIndex: modIndex
             });
 
-            // 最多保留200条历史记录防止占用过大存储
             if (historyLogs.length > 200) {
                 historyLogs.pop();
             }
@@ -1122,7 +1122,6 @@
             }
         }
 
-        // 清空历史记录及本地缓存
         function clearHistory() { 
             if(confirm("确定清空抽取记录？")) {
                 historyLogs = [];
