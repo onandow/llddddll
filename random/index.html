@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍌</text></svg>">
     <style>
         :root {
-            /* 日间模式 */
+            /* 日间 */
             --bg-gradient: linear-gradient(135deg, #edeef2 0%, #e2e4e9 100%);
             --card-bg: #ffffff;
             --card-border: #e2e5ec;
@@ -35,7 +35,7 @@
         }
 
         body.dark-mode {
-            /* 深夜模式 */
+            /* 深夜 */
             --bg-gradient: #121316;
             --card-bg: #1a1c22;
             --card-border: #2c303a;
@@ -863,16 +863,51 @@
             fileInput.click();
         }
 
-        // 语音朗读功能：确保立即重置并播报
+        // 移动端专用唤醒音频上下文，破除自动播放限制
+        let mobileAudioUnlocked = false;
+        function unlockMobileSpeechAudio() {
+            if (!('speechSynthesis' in window)) return;
+            try {
+                // 唤醒挂起的合成队列
+                if (window.speechSynthesis.paused) {
+                    window.speechSynthesis.resume();
+                }
+                // 使用短空格静音 utterance 瞬间借用户手势激活系统语音通道
+                const dummy = new SpeechSynthesisUtterance(' ');
+                dummy.volume = 0.01;
+                dummy.rate = 10;
+                window.speechSynthesis.speak(dummy);
+                mobileAudioUnlocked = true;
+            } catch(e) {}
+        }
+
+        // 手机端原生兼容朗读函数
         function speakText(text) {
             if (!enableTTS) return;
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel(); // 立即取消正在播放或挂起的语音
-                setTimeout(() => {
-                    const utterance = new SpeechSynthesisUtterance(text);
-                    utterance.lang = 'zh-CN';
-                    window.speechSynthesis.speak(utterance);
-                }, 50);
+            if (!('speechSynthesis' in window)) return;
+
+            try {
+                // 避免在 iOS 上连续快速调用 cancel 导致底层引擎假死
+                if (window.speechSynthesis.speaking) {
+                    window.speechSynthesis.cancel();
+                }
+                if (window.speechSynthesis.paused) {
+                    window.speechSynthesis.resume();
+                }
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-CN';
+                utterance.volume = 1;
+                utterance.rate = 1;
+                utterance.pitch = 1;
+
+                // 针对 Android Chrome 偶尔丢帧的保障
+                utterance.onend = () => {};
+                utterance.onerror = () => {};
+
+                window.speechSynthesis.speak(utterance);
+            } catch(e) {
+                console.error("TTS 出错:", e);
             }
         }
 
@@ -968,7 +1003,6 @@
             return { tMod, modIndex };
         }
 
-        // 显示结果面板、记录历史与语音播报
         function showAndLogResult(tMod, modIndex) {
             const palette = getCurrentPalette();
             const mEl = document.getElementById('res-modifier');
@@ -981,7 +1015,7 @@
             mEl.style.border = `2px solid ${colors.border}`;
 
             addHistory(tMod, modIndex);
-            speakText(tMod.text); // 执行语音朗读
+            speakText(tMod.text);
         }
 
         function handleRollButtonClick() {
@@ -989,6 +1023,9 @@
                 showToast("⚠️ 词条列表为空，请先在设置中添加");
                 return;
             }
+
+            // 无论哪种模式，只要触发了按钮点击手势，先激活移动端语音通道
+            unlockMobileSpeechAudio();
 
             if (!isWheelMode) {
                 const { tMod, modIndex } = pickRandomResult();
@@ -1023,6 +1060,9 @@
         }
 
         function stopWheelSpin() {
+            // 点击 Stop 时，再次在手势上下文中激活通道
+            unlockMobileSpeechAudio();
+
             wheelState = 'stopping';
             cancelAnimationFrame(animFrameId);
             
@@ -1074,7 +1114,7 @@
                     rollBtn.innerText = 'Gacha!!';
                     rollBtn.classList.remove('btn-stop');
 
-                    // 转盘彻底停止后，展示结果并朗读
+                    // 转盘完全停稳后，顺利执行结果展示和语音播报
                     showAndLogResult(pendingResult.tMod, pendingResult.modIndex);
                 }
             }
