@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍌</text></svg>">
     <style>
         :root {
-            /* 日间 */
+            /* 日间模式 */
             --bg-gradient: linear-gradient(135deg, #edeef2 0%, #e2e4e9 100%);
             --card-bg: #ffffff;
             --card-border: #e2e5ec;
@@ -35,7 +35,7 @@
         }
 
         body.dark-mode {
-            /* 深夜 */
+            /* 深夜模式 */
             --bg-gradient: #121316;
             --card-bg: #1a1c22;
             --card-border: #2c303a;
@@ -452,8 +452,9 @@
         <div class="settings-footer">Created by R @1203605850</div>
     </div>
 
-    <!-- 镜像页面按钮 -->
-    <div style="width: 100%; max-width: 500px; text-align: right; margin-bottom: 8px;">
+    <!-- 镜像页面与手动朗读按钮 -->
+    <div style="width: 100%; max-width: 500px; display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 8px;">
+        <button id="speakCurrentBtn" onclick="speakCurrentResult()" class="io-btn" style="padding: 5px 12px; font-size: 11px; flex: initial; display: none;">🍌 朗读结果</button>
         <button onclick="toggleMirror()" class="io-btn" style="padding: 5px 12px; font-size: 11px; flex: initial;">🦭 镜像页面</button>
     </div>
 
@@ -501,6 +502,7 @@
 
         let recentHistory = [];
         let historyLogs = [];
+        let latestResultText = ''; // 记录当前展示的最新结果文本
 
         // 转盘动效相关控制变量
         let currentWheelAngle = 0;
@@ -533,6 +535,9 @@
                 try {
                     historyLogs = JSON.parse(savedHistory);
                     renderHistoryTable();
+                    if (historyLogs.length > 0) {
+                        latestResultText = historyLogs[0].text;
+                    }
                     if (antiRepeatLimit > 0) {
                         recentHistory = historyLogs.slice(0, antiRepeatLimit).map(item => item.text).reverse();
                     }
@@ -569,16 +574,19 @@
             const modeBtn = document.getElementById('modeBtn');
             const wheelContainer = document.getElementById('wheel-container');
             const rollBtn = document.getElementById('rollBtn');
+            const speakCurrentBtn = document.getElementById('speakCurrentBtn');
 
             if (isWheelMode) {
                 modeBtn.innerText = '🦭';
                 modeBtn.title = '当前为转盘模式，点击切换为直接随机';
                 wheelContainer.style.display = 'flex';
+                speakCurrentBtn.style.display = 'inline-block'; // 转盘模式下展示朗读按钮
                 rollBtn.innerText = 'Gacha!!';
             } else {
                 modeBtn.innerText = '🍌';
                 modeBtn.title = '当前为直接随机，点击切换为转盘模式';
                 wheelContainer.style.display = 'none';
+                speakCurrentBtn.style.display = 'none'; // 旧模式下隐藏朗读按钮
                 rollBtn.innerText = 'Gacha!!';
                 rollBtn.classList.remove('btn-stop');
             }
@@ -863,31 +871,12 @@
             fileInput.click();
         }
 
-        // 移动端专用唤醒音频上下文，破除自动播放限制
-        let mobileAudioUnlocked = false;
-        function unlockMobileSpeechAudio() {
-            if (!('speechSynthesis' in window)) return;
-            try {
-                // 唤醒挂起的合成队列
-                if (window.speechSynthesis.paused) {
-                    window.speechSynthesis.resume();
-                }
-                // 使用短空格静音 utterance 瞬间借用户手势激活系统语音通道
-                const dummy = new SpeechSynthesisUtterance(' ');
-                dummy.volume = 0.01;
-                dummy.rate = 10;
-                window.speechSynthesis.speak(dummy);
-                mobileAudioUnlocked = true;
-            } catch(e) {}
-        }
-
-        // 手机端原生兼容朗读函数
+        // 语音朗读函数
         function speakText(text) {
             if (!enableTTS) return;
             if (!('speechSynthesis' in window)) return;
 
             try {
-                // 避免在 iOS 上连续快速调用 cancel 导致底层引擎假死
                 if (window.speechSynthesis.speaking) {
                     window.speechSynthesis.cancel();
                 }
@@ -901,14 +890,20 @@
                 utterance.rate = 1;
                 utterance.pitch = 1;
 
-                // 针对 Android Chrome 偶尔丢帧的保障
-                utterance.onend = () => {};
-                utterance.onerror = () => {};
-
                 window.speechSynthesis.speak(utterance);
             } catch(e) {
                 console.error("TTS 出错:", e);
             }
+        }
+
+        // 手动点击“🍌 朗读结果”按钮调用
+        function speakCurrentResult() {
+            if (!latestResultText || latestResultText.trim() === '') {
+                showToast("⚠️ 当前暂无抽取结果");
+                return;
+            }
+            speakText(latestResultText);
+            showToast(`🗣️ 正在朗读: ${latestResultText}`, 2000);
         }
 
         // ===================== 转盘绘制与动效 =====================
@@ -1008,6 +1003,7 @@
             const mEl = document.getElementById('res-modifier');
             const colors = palette[modIndex % palette.length];
             
+            latestResultText = tMod.text; // 更新当前最新抽取结果
             mEl.innerText = tMod.text;
             mEl.className = 'modifier-result';
             mEl.style.color = colors.text;
@@ -1023,9 +1019,6 @@
                 showToast("⚠️ 词条列表为空，请先在设置中添加");
                 return;
             }
-
-            // 无论哪种模式，只要触发了按钮点击手势，先激活移动端语音通道
-            unlockMobileSpeechAudio();
 
             if (!isWheelMode) {
                 const { tMod, modIndex } = pickRandomResult();
@@ -1060,9 +1053,6 @@
         }
 
         function stopWheelSpin() {
-            // 点击 Stop 时，再次在手势上下文中激活通道
-            unlockMobileSpeechAudio();
-
             wheelState = 'stopping';
             cancelAnimationFrame(animFrameId);
             
@@ -1114,7 +1104,6 @@
                     rollBtn.innerText = 'Gacha!!';
                     rollBtn.classList.remove('btn-stop');
 
-                    // 转盘完全停稳后，顺利执行结果展示和语音播报
                     showAndLogResult(pendingResult.tMod, pendingResult.modIndex);
                 }
             }
@@ -1168,6 +1157,7 @@
                 localStorage.removeItem('challenge_history_records_v7');
                 document.getElementById('history-body').innerHTML = '';
                 recentHistory = [];
+                latestResultText = '';
                 showToast("🗑️ 抽取记录已全部清空");
             }
         }
